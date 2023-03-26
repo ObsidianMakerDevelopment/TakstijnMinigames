@@ -1,0 +1,138 @@
+defaultTasks 'clean', 'build' , 'publishToMavenLocal'
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+         maven {
+            url = 'https://repo.screamingsandals.org/public'
+        }
+        maven {
+            url = uri('https://repo.dmulloy2.net/nexus/repository/public/')
+        }
+        maven {
+            url = uri('https://repo.dmulloy2.net/nexus/repository/public/')
+        }
+        maven {
+            url = uri('https://repo.screamingsandals.org/public')
+        }
+        maven {
+            url = uri('https://repo.screamingsandals.org/releases')
+        }
+        maven {
+            url = uri('https://repo.extendedclip.com/content/repositories/placeholderapi/')
+        }
+        maven {
+            url = uri('https://papermc.io/repo/repository/maven-public/')
+        }
+        maven {
+            url = uri('https://repo.maven.apache.org/maven2/')
+        }
+        
+        maven {
+            url = uri('https://repo.screamingsandals.org/snapshots')
+        }
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
+    }
+    dependencies {
+        classpath 'org.screamingsandals.gradle:builder:' + SCREAMING_PLUGIN_BUILDER_VERSION
+    }
+    dependencies {
+        classpath "com.github.gmazzo:gradle-buildconfig-plugin:${BUILDCONFIG_VERSION}"
+    }
+    repositories {
+        jcenter()
+    }
+ 
+    dependencies {
+        // Add dependency for build script,
+        // so we can access Git from our
+        // build script.
+        classpath 'org.ajoberstar:grgit:1.1.0'
+    }
+}
+ext {
+    // Open the Git repository in the current directory.
+    git = org.ajoberstar.grgit.Grgit.open(file('.'))
+ 
+    // Get commit id of HEAD.
+    revision = git.head().abbreviatedId
+    // Alternative is using abbreviatedId of head() method.
+    // revision = git.head().abbreviatedId
+}
+allprojects {
+    group = 'com.moyskleytech.mc.obsidianbb'
+    version = CORE_VERSION+"-"+revision
+}
+
+subprojects {
+    apply plugin: 'java'
+    
+    enableShadowPlugin()
+
+    configurations.all {
+        // Check for updates every build
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url = uri('https://repo.dmulloy2.net/nexus/repository/public/')
+        }
+        maven {
+            url = uri('https://repo.extendedclip.com/content/repositories/placeholderapi/')
+        }
+        maven {
+            url = uri('https://papermc.io/repo/repository/maven-public/')
+        }
+        maven {
+            url = uri('https://repo.maven.apache.org/maven2/')
+        }
+        maven {
+            url = uri('https://repo.screamingsandals.org/snapshots')
+        }
+        maven{ url = uri("https://repo.purpurmc.org/snapshots")}
+        maven{ url= uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")}
+        maven{ url= uri("https://papermc.io/repo/repository/maven-public/")} 
+        maven{ url= uri("https://repo.citizensnpcs.co/")}
+        maven{
+            url = uri('https://moyskleytech.com/debian/m2/')
+        }
+        maven { url 'https://jitpack.io' }
+
+          maven {
+            url=uri("https://repo.alessiodp.com/releases/")
+        }
+         maven {
+            url=uri("https://repo.alessiodp.com/snapshots/")
+        }
+    }
+
+    dependencies {
+        compileOnly "org.purpurmc.purpur:purpur-api:1.19.3-R0.1-SNAPSHOT"
+    }
+
+    shadowJar {
+        relocate 'org.spongepowered.configurate', 'com.moyskleytech.mc.lib.configurate'
+        relocate 'org.yaml.snakeyaml', 'com.moyskleytech.mc.lib.snakeyaml'
+        relocate 'cloud.commandframework', 'com.moyskleytech.mc.lib.cloud'
+        relocate 'me.lucko.commodore', 'com.moyskleytech.mc.lib.commodore'
+        relocate 'org.screamingsandals.lib', 'com.moyskleytech.mc.lib.screaminglib'
+        relocate 'com.iridium.iridiumcolorapi', 'com.moyskleytech.mc.lib.iridiumcolorapi'
+        relocate 'com.iridium', 'com.moyskleytech.mc.lib.iridium'
+        relocate 'com.samleighton.xquiset.sethomes', 'com.moyskleytech.mc.lib.sethomes'
+        minimize()
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+    sourceCompatibility = '17.0'
+}
+
+
+
