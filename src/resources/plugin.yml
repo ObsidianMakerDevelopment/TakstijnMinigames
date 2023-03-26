@@ -1,0 +1,10 @@
+name: ${description}
+version: ${version}
+description: BuildBattle for recent Paper servers
+main: com.moyskleytech.mc.BuildBattle.BuildBattle
+api-version: '1.13'
+author: boiscljo
+depend: [  ]
+softdepend:
+  - "PlaceholderAPI"
+  - "Citizens"

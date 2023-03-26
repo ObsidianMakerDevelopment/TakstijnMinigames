@@ -1,4 +1,4 @@
-name: Build and publish ObsidianCore
+name: Build and publish BuildBattle
 
 on:
   push:
@@ -33,4 +33,4 @@ jobs:
       - name: Upload the final artifact
         uses: actions/upload-artifact@v2
         with:
-          path: plugin/build/libs/ObsidianCore*[!s].jar
+          path: plugin/build/libs/BuildBattle*[!s].jar
