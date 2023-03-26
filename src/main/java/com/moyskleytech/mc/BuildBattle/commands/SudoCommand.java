@@ -21,29 +21,8 @@ public class SudoCommand extends CommandManager.Command {
         super.onLoad();
     }
     public void onPostEnabled() {
-        if (init)
-            return;
-        if (!ObsidianConfig.getInstance().essentials().sudo()) {
-            return;
-        }
         CommandManager.getInstance().getAnnotationParser().parse(this);
         init = true;
-    }
-
-    @CommandMethod("make <player> <command>")
-    @CommandPermission("obsidian.make")
-    private void commandMake(final  CommandSender player,
-            final @Argument(value = "player", parserName = "player_parser") Player target,
-            final @Greedy @Argument("command") String command) {
-        target.performCommand(command);
-    }
-
-    @CommandMethod("make everyone <command>")
-    @CommandPermission("obsidian.make")
-    private void commandMakeEveryone(final  CommandSender player, final @Greedy @Argument("command") String command) {
-        for (Player target : Bukkit.getServer().getOnlinePlayers()) {
-            target.performCommand(command);
-        }
     }
 
     @CommandMethod("sudo <command>")

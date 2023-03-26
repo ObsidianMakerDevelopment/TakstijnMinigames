@@ -3,25 +3,30 @@ package com.moyskleytech.mc.BuildBattle;
 import com.com.moyskleytech.mc.obsidianbb.ObsidianBB.BuildConfig;
 import com.moyskleytech.mc.BuildBattle.commands.CommandManager;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
+import com.moyskleytech.mc.BuildBattle.generator.VoidGen;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
-import com.moyskleytech.mc.BuildBattle.listeners.VoidTeleportListener;
+import com.moyskleytech.mc.BuildBattle.listeners.JoinLeaveListener;
 import com.moyskleytech.mc.BuildBattle.placeholderapi.BuildBattleExpansion;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.service.Service.ServiceLoadException;
+import com.moyskleytech.mc.BuildBattle.services.Data;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
 import com.moyskleytech.mc.BuildBattle.utils.Logger.Level;
 
 import lombok.Getter;
 
 import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Arrays;
 
 public class BuildBattle extends JavaPlugin {
@@ -37,6 +42,8 @@ public class BuildBattle extends JavaPlugin {
     private JavaPlugin cachedPluginInstance;
     private final List<Listener> registeredListeners = new ArrayList<>();
     private final List<Service> registeredServices = new ArrayList<>();
+    private VoidGen chunkGenerator;
+    private List<World> worlds = new ArrayList<>();
 
     public BuildBattleExpansion papi() {
         return exp;
@@ -61,11 +68,12 @@ public class BuildBattle extends JavaPlugin {
         Logger.init(cachedPluginInstance);
 
         // Load services
+        registeredServices.add(new Data());
         registeredServices.add(new ObsidianConfig(this));
         registeredServices.add(new LanguageConfig(this));
 
         registeredServices.add(new CommandManager());
-        registeredServices.add(new VoidTeleportListener());
+        registeredServices.add(new JoinLeaveListener());
 
         for (var service : registeredServices) {
             try {
@@ -74,9 +82,23 @@ public class BuildBattle extends JavaPlugin {
                 e.printStackTrace();
             }
         }
+        this.chunkGenerator = new VoidGen();
+    }
+
+    public World createEmptyWorld(World.Environment environment, String name) {
+        long begin = System.nanoTime();
+        WorldCreator worldCreator = new WorldCreator(name)
+                .generator(chunkGenerator)
+                .environment(environment);
+        World w = Bukkit.createWorld(worldCreator);
+        w.setAutoSave(false);
+        Logger.trace("Created world in " + (System.nanoTime() - begin) + " nanoseconds");
+        worlds.add(w);
+        return w;
     }
 
     public void reload() {
+
         for (var service : registeredServices) {
             try {
                 Logger.trace("{}", service.getClass().getName());
@@ -84,6 +106,41 @@ public class BuildBattle extends JavaPlugin {
             } catch (ServiceLoadException e) {
                 e.printStackTrace();
             }
+        }
+        getRidOfWorlds();
+    }
+
+    private void getRidOfWorlds() {
+        worlds.forEach(world -> {
+            File toDelete = world.getWorldFolder();
+            Bukkit.unloadWorld(world, false);
+            deleteWorld(toDelete);
+        });
+        worlds.clear();
+    }
+
+    public void deleteWorld(World world) {
+        File toDelete = world.getWorldFolder();
+        Bukkit.unloadWorld(world, false);
+        deleteWorld(toDelete);
+        worlds.remove(world);
+    }
+
+    public boolean deleteWorld(File path) {
+        try {
+            if (path.exists()) {
+                File files[] = path.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    if (files[i].isDirectory()) {
+                        deleteWorld(files[i]);
+                    } else {
+                        files[i].delete();
+                    }
+                }
+            }
+            return (path.delete());
+        } catch (Throwable t) {
+            return false;
         }
     }
 
@@ -104,7 +161,7 @@ public class BuildBattle extends JavaPlugin {
             exp = new BuildBattleExpansion();
             exp.register();
         }
-        
+
         Logger.info("Plugin has finished loading!");
         Logger.info("BuildBattle Initialized on JAVA {}", System.getProperty("java.version"));
         Logger.trace("API has been registered!");
@@ -112,7 +169,7 @@ public class BuildBattle extends JavaPlugin {
         Logger.setMode(Level.WARNING);
     }
 
-    public void registerListener( Listener listener) {
+    public void registerListener(Listener listener) {
         if (registeredListeners.contains(listener)) {
             return;
         }
@@ -120,7 +177,7 @@ public class BuildBattle extends JavaPlugin {
         Logger.trace("Registered listener: {}", listener.getClass().getSimpleName());
     }
 
-    public void unregisterListener( Listener listener) {
+    public void unregisterListener(Listener listener) {
         Logger.trace("Attempting to unregister: {}", listener.getClass().getSimpleName());
 
         try {
@@ -159,6 +216,7 @@ public class BuildBattle extends JavaPlugin {
         for (var service : registeredServices) {
             service.onUnload();
         }
+        getRidOfWorlds();
 
         Bukkit.getServer().getServicesManager().unregisterAll(getPluginInstance());
     }
@@ -174,4 +232,5 @@ public class BuildBattle extends JavaPlugin {
     public JavaPlugin getJavaPlugin() {
         return instance;
     }
+
 }

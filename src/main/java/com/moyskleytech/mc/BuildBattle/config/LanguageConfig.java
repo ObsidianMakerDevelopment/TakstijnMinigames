@@ -29,15 +29,9 @@ public class LanguageConfig extends Service {
         private int amount;
         private Player p;
         private OfflinePlayer target;
-        private Material ore = Material.AIR;
 
         public LanguagePlaceholder(Player p2) {
             this.p = p2;
-        }
-
-        public LanguagePlaceholder ore(Material ore) {
-            this.ore = ore;
-            return this;
         }
 
         public LanguagePlaceholder with(Player p) {
@@ -54,51 +48,19 @@ public class LanguageConfig extends Service {
             return this;
         }
 
-       
-        public Component deposited(int amount) {
-            this.amount = amount;
-            return of("transaction.deposit");
-        }
-
-        public Component withdrawed(int amount) {
-            this.amount = amount;
-            return of("transaction.withdraw");
-        }
-
-        public Component aboveZero() {
-            return of("above-zero");
-        }
-
-        public Component missingOre(int amount) {
-            this.amount = amount;
-            return of("missing-ore");
-        }
-
-        public Component notEnoughSpace(int amount) {
-            this.amount = amount;
-            return of("missing-space");
-        }
-        
-        public Component invalidOre() {
-            return of("invalid-ore");
-        }
-        
         public Component of(String s)
         {
             Component c = ObsidianUtil.component(placeholders(getString(s)));
             Logger.trace("Loaded translation for {}={}", s, c);
             return c;
         }
-
         
-        @SuppressWarnings("deprecation")
         private String placeholders(String src) {
             String process = src;
             var papi = BuildBattle.getInstance().papi();
 
             process = process.replaceAll("%sender%", p.getName())
-                    .replaceAll("%ore%", new ItemStack(ore).getI18NDisplayName())
-                    .replaceAll("%logo%", ObsidianConfig.getInstance().logo())
+                    .replaceAll("%prefix%", ObsidianConfig.getInstance().prefix())
                     .replaceAll("%amount%", String.valueOf(amount));
             if (target != null)
                 process = process.replaceAll("%target%", target.getName());
@@ -106,9 +68,6 @@ public class LanguageConfig extends Service {
                 process = papi.process(process, p);
             return process;
         }
-
-     
-
      
     }
 

@@ -46,7 +46,11 @@ dependencies {
     implementation("org.spongepowered:configurate-core:" + properties["CONFIGURATE_VERSION"])
     implementation("org.spongepowered:configurate-yaml:" + properties["CONFIGURATE_VERSION"])
     implementation("com.moyskleytech:ObsidianMaterialAPI:1.0.2")
-    
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.13.1")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.13.1")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1")
     
     // Other dependencies that are not required or already available at runtime
     compileOnly("org.purpurmc.purpur:purpur-api:1.19.3-R0.1-SNAPSHOT")
