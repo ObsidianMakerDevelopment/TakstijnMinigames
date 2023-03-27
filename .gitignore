@@ -15,3 +15,5 @@ gradle-app.setting
 .project
 .vscode/settings.json
 crowdin.yml
+*.bin
+*.jar

@@ -59,7 +59,7 @@ public class CommandManager extends Service {
         super();
         commands = new ArrayList<>();
        
-        commands.add(new SudoCommand());
+        commands.add(new JoinCommand());
 
         commands.forEach(arg0 -> {
             try {

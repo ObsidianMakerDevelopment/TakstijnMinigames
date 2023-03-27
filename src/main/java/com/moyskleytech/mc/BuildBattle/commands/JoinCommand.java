@@ -11,7 +11,7 @@ import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.CommandPermission;
 import cloud.commandframework.annotations.specifier.Greedy;
 
-public class SudoCommand extends CommandManager.Command {
+public class JoinCommand extends CommandManager.Command {
 
     static boolean init = false;
 

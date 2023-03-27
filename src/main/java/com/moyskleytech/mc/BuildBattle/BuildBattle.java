@@ -3,10 +3,12 @@ package com.moyskleytech.mc.BuildBattle;
 import com.com.moyskleytech.mc.obsidianbb.ObsidianBB.BuildConfig;
 import com.moyskleytech.mc.BuildBattle.commands.CommandManager;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
+import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.generator.VoidGen;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
 import com.moyskleytech.mc.BuildBattle.listeners.JoinLeaveListener;
 import com.moyskleytech.mc.BuildBattle.placeholderapi.BuildBattleExpansion;
+import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.service.Service.ServiceLoadException;
 import com.moyskleytech.mc.BuildBattle.services.Data;
@@ -74,6 +76,8 @@ public class BuildBattle extends JavaPlugin {
 
         registeredServices.add(new CommandManager());
         registeredServices.add(new JoinLeaveListener());
+        registeredServices.add(new Arenas());
+        registeredServices.add(new ScoreboardManager());
 
         for (var service : registeredServices) {
             try {

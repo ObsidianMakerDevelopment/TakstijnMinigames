@@ -1,3 +1,5 @@
+package com.moyskleytech.mc.BuildBattle.services;
+
 import java.util.concurrent.CompletableFuture;
 
 import org.bukkit.Location;
@@ -24,7 +26,7 @@ public class Paster extends Service {
 
     @Override
     public void onUnload() {
-        tasks.forEach(f->f.cancel());
+        tasks.forEach(f -> f.cancel());
         tasks.clear();
         super.onUnload();
     }
@@ -50,7 +52,7 @@ public class Paster extends Service {
                     Block sBlock = source.add(offsets.get(0)).getBlock();
                     dBlock.setBlockData(sBlock.getBlockData(), false);
                     if (dBlock.getState() != null)
-                    dBlock.getState().update();
+                        dBlock.getState().update();
                 }
                 if (offsets.size() == 0) {
                     paster.complete(null);
@@ -58,9 +60,8 @@ public class Paster extends Service {
             }
         }.runTaskTimer(BuildBattle.getInstance(), 1, 1);
         tasks.add(task);
-        paster = paster.thenAccept(e -> tasks.remove(task));
 
-        return paster;
+        return paster.thenAccept(e -> tasks.remove(task));
     }
 
     public CompletableFuture<Void> unpaste(Location destination, int width, int depth, int height) {
@@ -91,8 +92,7 @@ public class Paster extends Service {
             }
         }.runTaskTimer(BuildBattle.getInstance(), 1, 1);
         tasks.add(task);
-        paster = paster.thenAccept(e -> tasks.remove(task));
+        return paster.thenAccept(e -> tasks.remove(task));
 
-        return paster;
     }
 }

@@ -6,13 +6,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.Data;
 
-public class Arenas extends Service {
+public class Arenas extends Service implements Listener {
     private List<Arena> arenas;
     private List<RunningArena> runningArenas = new ArrayList<>();
     private Map<Player, RunningArena> arenaForPlayer = new HashMap<>();
@@ -46,6 +48,7 @@ public class Arenas extends Service {
             arenas.add(data.load(Arena.class, arena));
         }
 
+        BuildBattle.getInstance().registerListener(this);
         super.onLoad();
     }
 
@@ -66,5 +69,10 @@ public class Arenas extends Service {
     public RunningArena getArenaForPlayer(Player p)
     {
         return arenaForPlayer.get(p);
+    }
+
+    public boolean isArena(World w)
+    {
+        return runningArenas.stream().anyMatch(arena->arena.world.equals(w));
     }
 }

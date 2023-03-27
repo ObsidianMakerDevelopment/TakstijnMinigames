@@ -58,13 +58,16 @@ public class RunningArena {
         arenas.removeRunning(this);
     }
 
-    public void join(Player p) {
+    public CompletableFuture<Boolean> join(Player p) {
         if (state == ArenaState.LOBBY) {
             players.add(p);
             Arenas arenas = Service.get(Arenas.class);
             arenas.put(p, this);
-            // TODO:teleport to lobby
+
+            // teleport to lobby
+            return p.teleportAsync(world.getSpawnLocation());
         }
+        return CompletableFuture.completedFuture(false);
         // Do not join if the arena isn't in lobby mode
     }
 
@@ -106,22 +109,27 @@ public class RunningArena {
                             plots.put(player.getUniqueId(), playerPlot);
                         });
                 // Paste the plots
-                Object[] plotPasting = plots.values().stream().map(plot -> {
-                    return new CompletableFuture<Void>();
-                }).toArray();
-                CompletableFuture<Void> pasterAll = CompletableFuture.allOf((CompletableFuture<Void>[]) plotPasting);
-                players.forEach(
+
+                List<CompletableFuture<Boolean>> teleports = players.stream().map(
                         player -> {
                             // Teleport players to plots
-                            blockMovement = false;
-                            player.teleport(plots.get(player.getUniqueId()).center);
-                            // Teleport players to plots
-                            blockMovement = true;
+                            return player.teleportAsync(plots.get(player.getUniqueId()).center);
+                        }).toList();
+
+                CompletableFuture.allOf(
+                        (CompletableFuture<Boolean>[]) teleports.toArray()).thenAccept(ignored_teleport -> {
+                            Paster paster = Service.get(Paster.class);
+                            Object[] plotPasting = plots.values().stream().map(plot -> {
+                                return paster.paste(arena.plotSchematicCenter, plot.center, arena.plotSize+arena.contourSize, arena.plotSize+arena.contourSize, arena.plotHeight);
+                            }).toArray();
+                            CompletableFuture<Void> pasterAll = CompletableFuture
+                                    .allOf((CompletableFuture<Void>[]) plotPasting);
+
+                            pasterAll.thenAccept(ignored_ -> {
+                                setState(ArenaState.BUILDING);
+                                blockMovement = false;
+                            });
                         });
-                pasterAll.thenAccept(ignored_ -> {
-                    setState(ArenaState.BUILDING);
-                    blockMovement = false;
-                });
             });
         }
         if (state == ArenaState.BUILDING) {
