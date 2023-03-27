@@ -21,6 +21,11 @@ public class Arena {
     public Location lobbyCenter;
     public int lobbySize=10;
     public int lobbyHeight=10;
+    public int lobbyDuration=60;
+    public int gameDuration=180;
+    public int voteDuration=30;
+    public int winnerDuration=60;
+    public int minimumPlayers=2;
     public RunningArena start()
     {
         Arenas arenas = Service.get(Arenas.class);
@@ -30,6 +35,6 @@ public class Arena {
 
         arenas.addRunning(running);
 
-        return null;
+        return running;
     }
 }

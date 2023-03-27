@@ -2,6 +2,7 @@ package com.moyskleytech.mc.BuildBattle.game;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -10,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -33,7 +35,13 @@ public class RunningArena {
     Map<UUID, Plot> plots = new HashMap<>();
 
     boolean blockMovement = false;
+    boolean preventBuildDestroy = false;
     private Player winner;
+    private int countdown = 0;
+    private int voteIndex = 0;
+    private Iterator<Plot> plotsToVote;
+    private String theme;
+    private Plot current_plot;
 
     public String getName() {
         return world.getName();
@@ -69,7 +77,7 @@ public class RunningArena {
             arenas.put(p, this);
 
             // teleport to lobby
-            return p.teleportAsync(world.getSpawnLocation()).thenApply(teleport->{
+            return p.teleportAsync(world.getSpawnLocation()).thenApply(teleport -> {
                 return teleport;
             });
         }
@@ -89,18 +97,19 @@ public class RunningArena {
         Arenas arenas = Service.get(Arenas.class);
         arenas.put(p, null);
 
-        ScoreboardManager.getInstance().fromCache(p.getUniqueId()).ifPresent(scoreboard->scoreboard.destroy());
+        ScoreboardManager.getInstance().fromCache(p.getUniqueId()).ifPresent(scoreboard -> scoreboard.destroy());
     }
 
     private void setState(ArenaState state) {
 
         this.state = state;
         if (state == ArenaState.LOBBY) {
+            preventBuildDestroy = true;
             pasteLobby();
-            // TODO: check for amount of player above minimum to start the vote GUI, not
-            // here but as players joins
+            countdown = arena.getLobbyDuration();
         }
         if (state == ArenaState.STARTING) {
+            preventBuildDestroy = true;
             blockMovement = true;
             CompletableFuture<Void> unpasteLobby = Service.get(Paster.class).unpaste(world.getSpawnLocation(),
                     arena.lobbySize, arena.lobbySize, arena.lobbyHeight);
@@ -114,6 +123,7 @@ public class RunningArena {
                                     0, 0);
                             Plot playerPlot = new Plot();
                             playerPlot.center = center;
+                            playerPlot.owner = player;
                             plots.put(player.getUniqueId(), playerPlot);
                         });
                 // Paste the plots
@@ -121,6 +131,9 @@ public class RunningArena {
                 List<CompletableFuture<Boolean>> teleports = players.stream().map(
                         player -> {
                             // Teleport players to plots
+                            player.setGameMode(GameMode.CREATIVE);
+                            player.setAllowFlight(true);
+                            player.setFlying(true);
                             return player.teleportAsync(plots.get(player.getUniqueId()).center);
                         }).toList();
 
@@ -137,35 +150,105 @@ public class RunningArena {
 
                             pasterAll.thenAccept(ignored_ -> {
                                 setState(ArenaState.BUILDING);
-                                blockMovement = false;
                             });
                         });
             });
         }
         if (state == ArenaState.BUILDING) {
-            // TODO: Start countdown
+            // Start countdown
+            preventBuildDestroy = false;
+            blockMovement = false;
+            countdown = arena.getGameDuration();
         }
         if (state == ArenaState.SHOWING_BUILDS) {
-            // TODO: Teleport players to plots, 1 by one
-            // TODO: Put voting items in player hotbars
+            preventBuildDestroy = true;
+            countdown = arena.getVoteDuration();
+            voteIndex = 0;
+            plotsToVote= plots.values().iterator();
+            showBuildForVote();
         }
         if (state == ArenaState.SHOWING_WINNER) {
             // TODO: Show Score, if present
-            // TODO: Teleport to plot
-            // TODO: Start countdown for next stage
+            preventBuildDestroy = true;
+
+            // Start countdown for next stage
+            countdown = arena.getWinnerDuration();
+            if (winner != null) {
+                Plot plot = plots.get(winner.getUniqueId());
+                if (plot != null) {
+                    // Teleport to plot
+                    players.forEach(player -> player.teleport(plot.center));
+                } else {
+                    // WTF, winner has no plot?
+                    setState(ArenaState.ENDING);
+                }
+            } else {
+                // No winner so go straight to ending
+                setState(ArenaState.ENDING);
+            }
         }
         if (state == ArenaState.ENDING) {
             blockMovement = true;
-            CompletableFuture<Void> unpaster = new CompletableFuture<>();
 
-            unpaster.thenAccept(e -> stop());
-            // TODO: Unpaste all plots
-            unpaster.complete(null);
+            Paster paster = Service.get(Paster.class);
+            // Unpaste all plots
+            Object[] plotPasting = plots.values().stream().map(plot -> {
+                return paster.unpaste(plot.center,
+                        arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
+                        arena.plotHeight);
+            }).toArray();
+            CompletableFuture<Void> unpasterAll = CompletableFuture
+                    .allOf((CompletableFuture<Void>[]) plotPasting);
+
+            unpasterAll.thenAccept(e -> stop());
         }
-        // TODO: Implement
     }
 
-    public void createScoreboard( Player player) {
+    private void showBuildForVote() {
+        current_plot = plotsToVote.next();
+        // Teleport players to plots, 1 by one
+        players.forEach(player->player.teleport(current_plot.center));
+
+        // TODO: Put voting items in player hotbars
+    }
+
+    public void tick() {
+        if (state == ArenaState.LOBBY) {
+            if (players.size() > arena.getMinimumPlayers()) {
+                // TODO: check for amount of player above minimum to start the vote GUI
+                //Once enough players have joined reduce the countdown
+                countdown--;
+                if (countdown == 0) {
+                    setState(ArenaState.STARTING);
+                }
+            }
+        }
+        if (state == ArenaState.BUILDING) {
+            countdown--;
+            if (countdown == 0) {
+                setState(ArenaState.SHOWING_BUILDS);
+            }
+        }
+        if (state == ArenaState.SHOWING_BUILDS) {
+            countdown--;
+            if (countdown == 0) {
+                voteIndex++;
+                if (voteIndex >= plots.size()) {
+                    setState(ArenaState.SHOWING_WINNER);
+                } else {
+                    showBuildForVote();
+                }
+            }
+        }
+        if (state == ArenaState.SHOWING_WINNER) {
+            countdown--;
+            if (countdown == 0) {
+                setState(ArenaState.ENDING);
+            }
+        }
+    }
+
+    public void createScoreboard(Player player) {
         final var scoreboardOptional = ScoreboardManager.getInstance()
                 .fromCache(player.getUniqueId());
         scoreboardOptional.ifPresent(Scoreboard::destroy);
@@ -174,7 +257,7 @@ public class RunningArena {
                 .getInstance()
                 .scoreboard().animatedTitle();
 
-        final var scoreboard = Scoreboard.builder()
+        Scoreboard.builder()
                 .player(player)
                 .displayObjective("bwa-game")
                 .updateInterval(10L)
@@ -186,23 +269,49 @@ public class RunningArena {
                 })
                 .build();
     }
+
+
     public List<String> getScoreboardLines(Player player, Scoreboard board) {
         final var lines = new ArrayList<String>();
 
         final var arena = Service.get(Arenas.class).getArenaForPlayer(player);
 
-        List<String> scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+        List<String> scoreboard_lines = List.of();
+        if (state == ArenaState.LOBBY)
+            scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+        else if (state == ArenaState.STARTING)
+            scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+        else if (state == ArenaState.BUILDING)
+            scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+        else if (state == ArenaState.SHOWING_BUILDS)
+            scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+        else if (state == ArenaState.SHOWING_WINNER)
+            scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
 
         scoreboard_lines.stream()
                 .filter(Objects::nonNull)
                 .forEach(line -> {
                     line = line
                             .replace("%bb_version%", BuildBattle.getInstance().getVersion())
+                            .replace("%theme%",theme)
+                            .replace("%state%",state.toString())
+                            .replace("%countdown%",String.valueOf(countdown))
+                            .replace("%winner%",winner.getDisplayName())
+                            .replace("%minutes%",String.valueOf(minutes()))
+                            .replace("%seconds%",String.valueOf(seconds()))
+                            .replace("%current_plot%",current_plot.owner.getDisplayName())
                             .replace("%player_count%", String.valueOf(arena.players.size()))
                             .replace("%arena%", arena.getName());
-
                     lines.add(line);
                 });
         return lines;
+    }
+    public int seconds()
+    {
+        return countdown%60;
+    }
+    public int minutes()
+    {
+        return countdown/60;
     }
 }
