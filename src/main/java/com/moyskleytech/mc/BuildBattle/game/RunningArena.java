@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,6 +15,9 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
+import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
+import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.Paster;
 
@@ -65,7 +69,9 @@ public class RunningArena {
             arenas.put(p, this);
 
             // teleport to lobby
-            return p.teleportAsync(world.getSpawnLocation());
+            return p.teleportAsync(world.getSpawnLocation()).thenApply(teleport->{
+                return teleport;
+            });
         }
         return CompletableFuture.completedFuture(false);
         // Do not join if the arena isn't in lobby mode
@@ -82,6 +88,8 @@ public class RunningArena {
         }
         Arenas arenas = Service.get(Arenas.class);
         arenas.put(p, null);
+
+        ScoreboardManager.getInstance().fromCache(p.getUniqueId()).ifPresent(scoreboard->scoreboard.destroy());
     }
 
     private void setState(ArenaState state) {
@@ -120,7 +128,9 @@ public class RunningArena {
                         (CompletableFuture<Boolean>[]) teleports.toArray()).thenAccept(ignored_teleport -> {
                             Paster paster = Service.get(Paster.class);
                             Object[] plotPasting = plots.values().stream().map(plot -> {
-                                return paster.paste(arena.plotSchematicCenter, plot.center, arena.plotSize+arena.contourSize, arena.plotSize+arena.contourSize, arena.plotHeight);
+                                return paster.paste(arena.plotSchematicCenter, plot.center,
+                                        arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
+                                        arena.plotHeight);
                             }).toArray();
                             CompletableFuture<Void> pasterAll = CompletableFuture
                                     .allOf((CompletableFuture<Void>[]) plotPasting);
@@ -153,5 +163,46 @@ public class RunningArena {
             unpaster.complete(null);
         }
         // TODO: Implement
+    }
+
+    public void createScoreboard( Player player) {
+        final var scoreboardOptional = ScoreboardManager.getInstance()
+                .fromCache(player.getUniqueId());
+        scoreboardOptional.ifPresent(Scoreboard::destroy);
+
+        final var title = LanguageConfig
+                .getInstance()
+                .scoreboard().animatedTitle();
+
+        final var scoreboard = Scoreboard.builder()
+                .player(player)
+                .displayObjective("bwa-game")
+                .updateInterval(10L)
+                .animationInterval(2L)
+                .animatedTitle(title)
+                .updateCallback(board -> {
+                    board.setLines(getScoreboardLines(player, board));
+                    return true;
+                })
+                .build();
+    }
+    public List<String> getScoreboardLines(Player player, Scoreboard board) {
+        final var lines = new ArrayList<String>();
+
+        final var arena = Service.get(Arenas.class).getArenaForPlayer(player);
+
+        List<String> scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+
+        scoreboard_lines.stream()
+                .filter(Objects::nonNull)
+                .forEach(line -> {
+                    line = line
+                            .replace("%bb_version%", BuildBattle.getInstance().getVersion())
+                            .replace("%player_count%", String.valueOf(arena.players.size()))
+                            .replace("%arena%", arena.getName());
+
+                    lines.add(line);
+                });
+        return lines;
     }
 }

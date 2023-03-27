@@ -159,6 +159,26 @@ public class LanguageConfig extends Service {
             return getString("error.non_existing_map");
         }
     }
+    public ScoreboardConfig scoreboard() {
+        return new ScoreboardConfig();
+    }
+
+    public class ScoreboardConfig {
+
+        public static ConfigSection build(ConfigSection section) throws SerializationException {
+            return section.section("scoreboard")
+            .key("animatedTitle").defValue(List.of("&eBuildBattle","&aBuildBattle"))
+            .key("lobbyScoreboard").defValue(List.of("","Arena: %arena%","Players: %player_count%","","&7%bb_version%"))
+            .back();
+        }
+        public List<String> animatedTitle()
+        {
+            return getStringList("scoreboard.animatedTitle");
+        }
+        public List<String> lobbyScoreboard() {
+            return getStringList("scoreboard.lobbyScoreboard");
+        }
+    }
 
     public void forceReload() {
         loadDefaults();
@@ -217,4 +237,6 @@ public class LanguageConfig extends Service {
         }
         return str;
     }
+
+  
 }
