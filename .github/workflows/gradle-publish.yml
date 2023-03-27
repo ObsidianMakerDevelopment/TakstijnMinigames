@@ -2,7 +2,7 @@ name: Build and publish BuildBattle
 
 on:
   push:
-    branches: [ main ]
+    branches: [ plugin ]
 concurrency: Banking_v1
 jobs:
   build:
@@ -33,4 +33,4 @@ jobs:
       - name: Upload the final artifact
         uses: actions/upload-artifact@v2
         with:
-          path: plugin/build/libs/BuildBattle*[!s].jar
+          path: build/libs/BuildBattle*[!s].jar
