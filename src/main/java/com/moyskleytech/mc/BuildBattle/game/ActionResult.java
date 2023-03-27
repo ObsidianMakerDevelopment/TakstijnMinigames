@@ -6,6 +6,7 @@ import lombok.Getter;
 public class ActionResult {
 
     public static final String MAP_NOT_EXISTING = "error.non_existing_map";
+    public static final String ARENA_ALREADY_REGISTERED = "error.arena_already_registered";
 
     private String errorKey = null;
     private boolean isSuccess = true;

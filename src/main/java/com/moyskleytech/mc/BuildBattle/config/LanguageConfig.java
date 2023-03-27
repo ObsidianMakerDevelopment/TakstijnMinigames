@@ -152,6 +152,7 @@ public class LanguageConfig extends Service {
         public static ConfigSection build(ConfigSection section) throws SerializationException {
             return section.section("error")
             .key("non_existing_map").defValue("There is no map for the specified name")
+            .key("arena_already_registered").defValue("The arena is already registered")
             .back();
         }
         public String nonExistingMap()

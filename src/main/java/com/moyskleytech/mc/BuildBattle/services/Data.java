@@ -114,7 +114,7 @@ public class Data extends Service {
      * @param instance The instance of the object which should be saved
      * @param file     The file where the object should be persisted to
      */
-    private void save(Object instance, File file) {
+    public void save(Object instance, File file) {
         try {
             objectMapper.writeValue(file, instance);
         } catch (IOException e) {

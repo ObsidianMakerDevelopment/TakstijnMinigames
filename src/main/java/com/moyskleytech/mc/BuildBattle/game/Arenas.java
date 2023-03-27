@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+
+import javax.swing.Action;
 
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -20,6 +23,7 @@ public class Arenas extends Service implements Listener {
     private List<Arena> arenas;
     private List<RunningArena> runningArenas = new ArrayList<>();
     private Map<Player, RunningArena> arenaForPlayer = new HashMap<>();
+    private File arenasFolder;
 
     public List<Arena> getArenas() {
         return new ArrayList<>(arenas);
@@ -41,17 +45,42 @@ public class Arenas extends Service implements Listener {
     public void onLoad() throws ServiceLoadException {
         BuildBattle plugin = BuildBattle.getInstance();
         File folder = plugin.getDataFolder();
-        File arenasFolder = new File(folder, "arenas");
+        arenasFolder = new File(folder, "arenas");
         arenasFolder.mkdir();
 
         Data data = Service.get(Data.class);
         arenas = new ArrayList<>();
         for (File arena : arenasFolder.listFiles()) {
-            arenas.add(data.load(Arena.class, arena));
+            Arena arena2 = (data.load(Arena.class, arena));
+            if (!arena.getName().equals(arena2.getId().toString() + ".yml")) {
+                throw new ServiceLoadException("File " + arena + " contains arena " + arena2.getId()
+                        + " and should be named " + arena2.getId() + ".yml");
+            }
+            arenas.add(arena2);
         }
 
         BuildBattle.getInstance().registerListener(this);
         super.onLoad();
+    }
+
+    public ActionResult register(Arena a) {
+        Data data = Service.get(Data.class);
+        if (byId(a.getId()) != null) {
+            return ActionResult.failure(ActionResult.ARENA_ALREADY_REGISTERED);
+        }
+        arenas.add(a);
+        File arenaFile = new File(arenasFolder, a.getId().toString() + ".yml");
+        data.save(a, arenaFile);
+        return ActionResult.success();
+    }
+
+    public ActionResult save(Arena a) {
+        if (!register(a).isSuccess()) {
+            Data data = Service.get(Data.class);
+            File arenaFile = new File(arenasFolder, a.getId().toString() + ".yml");
+            data.save(a, arenaFile);
+        }
+        return ActionResult.success();
     }
 
     @Override
@@ -68,50 +97,45 @@ public class Arenas extends Service implements Listener {
             arenaForPlayer.put(p, runningArena);
     }
 
-    public RunningArena getArenaForPlayer(Player p)
-    {
+    public RunningArena getArenaForPlayer(Player p) {
         return arenaForPlayer.get(p);
     }
 
-    public boolean isArena(World w)
-    {
-        return runningArenas.stream().anyMatch(arena->arena.world.equals(w));
+    public boolean isArena(World w) {
+        return runningArenas.stream().anyMatch(arena -> arena.world.equals(w));
     }
 
     public ActionResult joinRandomly(Player player) {
 
-        Optional<RunningArena> joinable = runningArenas.stream().filter(ra->ra.state == ArenaState.LOBBY).findAny();
-        if(joinable.isPresent())
-        {
+        Optional<RunningArena> joinable = runningArenas.stream().filter(ra -> ra.state == ArenaState.LOBBY).findAny();
+        if (joinable.isPresent()) {
             joinable.get().join(player);
             return ActionResult.success();
-        }
-        else
-        {
+        } else {
             List<Arena> maps = getArenas();
             Collections.shuffle(maps);
 
-            Arena toStart= maps.get(0);
+            Arena toStart = maps.get(0);
             RunningArena running = toStart.start();
             running.join(player);
             return ActionResult.success();
         }
     }
+
     public ActionResult join(Player player, String map) {
-        return join(player,map,true);
+        return join(player, map, true);
     }
+
     public ActionResult join(Player player, String map, boolean allowExisting) {
 
-        Optional<RunningArena> joinable = runningArenas.stream().filter(ra->ra.state == ArenaState.LOBBY && ra.arena.getName().equals(map)).findAny();
-        if(allowExisting && joinable.isPresent())
-        {
+        Optional<RunningArena> joinable = runningArenas.stream()
+                .filter(ra -> ra.state == ArenaState.LOBBY && ra.arena.getName().equals(map)).findAny();
+        if (allowExisting && joinable.isPresent()) {
             joinable.get().join(player);
             return ActionResult.success();
-        }
-        else
-        {
-            Arena toStart= byName(map);
-            if(toStart==null)
+        } else {
+            Arena toStart = byName(map);
+            if (toStart == null)
                 return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
             RunningArena running = toStart.start();
@@ -121,6 +145,10 @@ public class Arenas extends Service implements Listener {
     }
 
     private Arena byName(String map) {
-        return arenas.stream().filter(ar->ar.getName().equalsIgnoreCase(map)).findAny().orElse(null);
+        return arenas.stream().filter(ar -> ar.getName().equalsIgnoreCase(map)).findAny().orElse(null);
+    }
+
+    private Arena byId(UUID map) {
+        return arenas.stream().filter(ar -> ar.getId().equals(map)).findAny().orElse(null);
     }
 }

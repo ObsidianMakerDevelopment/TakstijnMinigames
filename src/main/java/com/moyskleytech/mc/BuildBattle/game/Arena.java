@@ -1,5 +1,7 @@
 package com.moyskleytech.mc.BuildBattle.game;
 
+import java.util.UUID;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldType;
@@ -12,6 +14,7 @@ import lombok.Getter;
 
 @Getter
 public class Arena {
+    public UUID id;
     public Environment type = Environment.NORMAL;
     public int plotSize = 20;
     public int plotHeight=40;
