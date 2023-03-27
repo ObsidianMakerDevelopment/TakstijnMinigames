@@ -4,11 +4,11 @@
 .settings
 
 /.gradle
-*/build/
+*build/
 gradle-app.setting
 !gradle-wrapper.jar
 .gradletasknamecache
-*/bin/*
+*bin/*
 *.class
 .settings\
 .classpath
