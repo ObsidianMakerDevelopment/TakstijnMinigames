@@ -27,4 +27,4 @@ jobs:
       - name: Upload the final artifact
         uses: actions/upload-artifact@v2
         with:
-          path: build/libs/BuildBattle*[!s].jar
+          path: build/libs/ObsidianBB*[!s].jar

@@ -11,10 +11,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
+import com.moyskleytech.mc.BuildBattle.config.ConfigGenerator.ConfigSection;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 
@@ -43,18 +45,18 @@ public class LanguageConfig extends Service {
             this.target = p;
             return this;
         }
+
         public LanguagePlaceholder amount(int p) {
             this.amount = p;
             return this;
         }
 
-        public Component of(String s)
-        {
+        public Component of(String s) {
             Component c = ObsidianUtil.component(placeholders(getString(s)));
             Logger.trace("Loaded translation for {}={}", s, c);
             return c;
         }
-        
+
         private String placeholders(String src) {
             String process = src;
             var papi = BuildBattle.getInstance().papi();
@@ -68,7 +70,7 @@ public class LanguageConfig extends Service {
                 process = papi.process(process, p);
             return process;
         }
-     
+
     }
 
     public static LanguageConfig getInstance() {
@@ -91,16 +93,16 @@ public class LanguageConfig extends Service {
         super();
         this.plugin = plugin;
     }
+
     @Override
     public void onLoad() throws ServiceLoadException {
-        try{
+        try {
             loadDefaults();
             super.onLoad();
-        }
-        catch(Throwable e){
+        } catch (Throwable e) {
             throw new ServiceLoadException(e);
         }
-        
+
     }
 
     public ConfigurationNode node(Object... keys) {
@@ -121,7 +123,7 @@ public class LanguageConfig extends Service {
             configurationNode = loader.load();
 
             generator = new ConfigGenerator(loader, configurationNode);
-            generator.start()
+            ConfigSection section = generator.start()
                     .key("version").defValue(plugin.getDescription().getVersion())
                     .section("transaction")
                     .key("deposit").defValue("%logo% &aDeposited %amount% %ore%")
@@ -130,11 +132,31 @@ public class LanguageConfig extends Service {
                     .key("above-zero").defValue("%logo% &cAmount must be above 0")
                     .key("missing-ore").defValue("%logo% &cYou do not have the required %amount% %ore%")
                     .key("invalid-ore").defValue("%logo% &c%ore% is not a valid bank ore")
-                    .key("missing-space").defValue("%logo% &cYou do not have enough place in inventory for %amount% %ore%");
+                    .key("missing-space")
+                    .defValue("%logo% &cYou do not have enough place in inventory for %amount% %ore%");
+
+            ErrorMessages.build(section);
 
             generator.saveIfModified();
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+
+    public ErrorMessages error() {
+        return new ErrorMessages();
+    }
+
+    public class ErrorMessages {
+
+        public static ConfigSection build(ConfigSection section) throws SerializationException {
+            return section.section("error")
+            .key("non_existing_map").defValue("There is no map for the specified name")
+            .back();
+        }
+        public String nonExistingMap()
+        {
+            return getString("error.non_existing_map");
         }
     }
 
