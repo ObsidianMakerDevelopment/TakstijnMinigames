@@ -23,17 +23,38 @@ import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 import java.io.File;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Pattern;
+
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class LanguageConfig extends Service {
 
-    public class LanguagePlaceholder {
-        private int amount;
+    public static class LanguagePlaceholder {
         private Player p;
-        private OfflinePlayer target;
+        private Component message;
 
         public LanguagePlaceholder(Player p2) {
             this.p = p2;
+        }
+
+        public LanguagePlaceholder(String p2) {
+            this.message = ObsidianUtil.component(p2);
+        }
+        public static LanguagePlaceholder of(String s)
+        {
+            return new LanguagePlaceholder(s);
+        }
+
+        public Component component() {
+            Component c = ObsidianUtil.component(placeholders(message));
+            Logger.trace("Loaded translation for {}={}", message, c);
+            return c;
+        }
+        public String string() {
+            Component c = placeholders(message);
+            Logger.trace("Loaded translation for {}={}", message, c);
+            return LegacyComponentSerializer.legacySection().serialize(c);
         }
 
         public LanguagePlaceholder with(Player p) {
@@ -41,33 +62,19 @@ public class LanguageConfig extends Service {
             return this;
         }
 
-        public LanguagePlaceholder target(OfflinePlayer p) {
-            this.target = p;
-            return this;
-        }
-
-        public LanguagePlaceholder amount(int p) {
-            this.amount = p;
-            return this;
-        }
-
-        public Component of(String s) {
-            Component c = ObsidianUtil.component(placeholders(getString(s)));
-            Logger.trace("Loaded translation for {}={}", s, c);
-            return c;
-        }
-
-        private String placeholders(String src) {
-            String process = src;
+        private Component placeholders(Component src) {
+            Component process = src;
             var papi = BuildBattle.getInstance().papi();
-
-            process = process.replaceAll("%sender%", p.getName())
-                    .replaceAll("%prefix%", ObsidianConfig.getInstance().prefix())
-                    .replaceAll("%amount%", String.valueOf(amount));
-            if (target != null)
-                process = process.replaceAll("%target%", target.getName());
+            process= process.replaceText(builder-> builder.match("%prefix").replacement(ObsidianConfig.getInstance().prefix()).build());
+            if(p!=null)
+                process=process.replaceText(builder-> builder.match("%prefix").replacement(p.displayName()).build());
             if (papi != null)
-                process = papi.process(process, p);
+            {
+                var pattern = Pattern.compile("[%]([^%]+)[%]");
+                process = process.replaceText(builder->builder.match(pattern).replacement((mr,b)->{
+                    return ObsidianUtil.component(papi.process("%"+mr.group(1)+"%",p));
+                }));
+            }
             return process;
         }
 
@@ -153,11 +160,20 @@ public class LanguageConfig extends Service {
             return section.section("error")
             .key("non_existing_map").defValue("There is no map for the specified name")
             .key("arena_already_registered").defValue("The arena is already registered")
+            .key("not_playing").defValue("You are not currently in a game")
             .back();
         }
-        public String nonExistingMap()
+        public LanguagePlaceholder nonExistingMap()
         {
-            return getString("error.non_existing_map");
+            return LanguagePlaceholder.of(getString("error.non_existing_map"));
+        }
+        public LanguagePlaceholder arenaAlreadyRegistered()
+        {
+            return LanguagePlaceholder.of(getString("error.arena_already_registered"));
+        }
+        public LanguagePlaceholder notPlaying()
+        {
+            return LanguagePlaceholder.of(getString("error.not_playing"));
         }
     }
     public ScoreboardConfig scoreboard() {

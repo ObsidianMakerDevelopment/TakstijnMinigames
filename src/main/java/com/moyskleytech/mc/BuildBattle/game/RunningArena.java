@@ -87,9 +87,11 @@ public class RunningArena {
 
     public void leave(Player p) {
         players.remove(p);
-        if (players.size() == 1) {
-            winner = players.get(0);
-            setState(ArenaState.SHOWING_WINNER);
+        if (state != ArenaState.LOBBY && state != ArenaState.ENDING) {
+            if (players.size() == 1) {
+                winner = players.get(0);
+                setState(ArenaState.SHOWING_WINNER);
+            }
         }
         if (players.size() == 0) {
             stop();
@@ -164,7 +166,7 @@ public class RunningArena {
             preventBuildDestroy = true;
             countdown = arena.getVoteDuration();
             voteIndex = 0;
-            plotsToVote= plots.values().iterator();
+            plotsToVote = plots.values().iterator();
             showBuildForVote();
         }
         if (state == ArenaState.SHOWING_WINNER) {
@@ -207,7 +209,7 @@ public class RunningArena {
     private void showBuildForVote() {
         current_plot = plotsToVote.next();
         // Teleport players to plots, 1 by one
-        players.forEach(player->player.teleport(current_plot.center));
+        players.forEach(player -> player.teleport(current_plot.center));
 
         // TODO: Put voting items in player hotbars
     }
@@ -216,7 +218,7 @@ public class RunningArena {
         if (state == ArenaState.LOBBY) {
             if (players.size() > arena.getMinimumPlayers()) {
                 // TODO: check for amount of player above minimum to start the vote GUI
-                //Once enough players have joined reduce the countdown
+                // Once enough players have joined reduce the countdown
                 countdown--;
                 if (countdown == 0) {
                     setState(ArenaState.STARTING);
@@ -270,7 +272,6 @@ public class RunningArena {
                 .build();
     }
 
-
     public List<String> getScoreboardLines(Player player, Scoreboard board) {
         final var lines = new ArrayList<String>();
 
@@ -293,25 +294,25 @@ public class RunningArena {
                 .forEach(line -> {
                     line = line
                             .replace("%bb_version%", BuildBattle.getInstance().getVersion())
-                            .replace("%theme%",theme)
-                            .replace("%state%",state.toString())
-                            .replace("%countdown%",String.valueOf(countdown))
-                            .replace("%winner%",winner.getDisplayName())
-                            .replace("%minutes%",String.valueOf(minutes()))
-                            .replace("%seconds%",String.valueOf(seconds()))
-                            .replace("%current_plot%",current_plot.owner.getDisplayName())
+                            .replace("%theme%", theme)
+                            .replace("%state%", state.toString())
+                            .replace("%countdown%", String.valueOf(countdown))
+                            .replace("%winner%", winner.getDisplayName())
+                            .replace("%minutes%", String.valueOf(minutes()))
+                            .replace("%seconds%", String.valueOf(seconds()))
+                            .replace("%current_plot%", current_plot.owner.getDisplayName())
                             .replace("%player_count%", String.valueOf(arena.players.size()))
                             .replace("%arena%", arena.getName());
                     lines.add(line);
                 });
         return lines;
     }
-    public int seconds()
-    {
-        return countdown%60;
+
+    public int seconds() {
+        return countdown % 60;
     }
-    public int minutes()
-    {
-        return countdown/60;
+
+    public int minutes() {
+        return countdown / 60;
     }
 }

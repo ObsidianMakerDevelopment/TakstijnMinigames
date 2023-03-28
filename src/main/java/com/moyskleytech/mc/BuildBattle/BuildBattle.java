@@ -98,6 +98,7 @@ public class BuildBattle extends JavaPlugin {
                 .environment(environment);
         World w = Bukkit.createWorld(worldCreator);
         w.setAutoSave(false);
+        w.setSpawnLocation(0, 64, 0);
         Logger.trace("Created world in " + (System.nanoTime() - begin) + " nanoseconds");
         worlds.add(w);
         return w;

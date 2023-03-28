@@ -60,6 +60,7 @@ public class CommandManager extends Service {
         commands = new ArrayList<>();
        
         commands.add(new JoinCommand());
+        commands.add(new ForceCommand());
 
         commands.forEach(arg0 -> {
             try {
