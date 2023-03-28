@@ -1,47 +1,36 @@
 package com.moyskleytech.mc.BuildBattle.scoreboard.scoreboardr.board.animations;
+
 //https://github.com/RienBijl/Scoreboard-revision/blob/master/src/main/java/rien/bijl/Scoreboard/r/Board/Animations/Row.java
 import java.util.List;
 
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
+
 public class Row {
 
-    private List<String> lines;
+    private List<LanguagePlaceholder> lines;
     private int interval;
     private int count = 0;
     private int current = 1;
     private boolean is_static = false;
 
-    private String line;
+    private LanguagePlaceholder line;
 
-    public Row(List<String> lines, int interval)
-    {
+    public Row(List<LanguagePlaceholder> lines, int interval) {
         this.lines = lines;
         this.interval = interval;
 
-        if (lines.size() == 1) {
-            is_static = true;
-        } else {
-            for (String line: lines) {
-                if (line.contains("%")) {
-                    is_static = false;
-                    break;
-                }
-            }
-        }
-
         if (lines.size() < 1) {
-            line = "";
+            line = LanguagePlaceholder.of("");
         } else {
             this.line = lines.get(0);
         }
     }
 
-    public String getLine()
-    {
-        return this.line;
+    public String getLine() {
+        return this.line.string();
     }
 
-    public void update()
-    {
+    public void update() {
         if (is_static) {
             return;
         }

@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
 import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
 import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
 import com.moyskleytech.mc.BuildBattle.service.Service;
@@ -272,38 +273,36 @@ public class RunningArena {
                 .build();
     }
 
-    public List<String> getScoreboardLines(Player player, Scoreboard board) {
-        final var lines = new ArrayList<String>();
-
+    public List<LanguagePlaceholder> getScoreboardLines(Player player, Scoreboard board) {
+        final var lines = new ArrayList<LanguagePlaceholder>();
         final var arena = Service.get(Arenas.class).getArenaForPlayer(player);
 
-        List<String> scoreboard_lines = List.of();
+        List<LanguagePlaceholder> scoreboard_lines = List.of();
         if (state == ArenaState.LOBBY)
             scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
         else if (state == ArenaState.STARTING)
-            scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+            scoreboard_lines = LanguageConfig.getInstance().scoreboard().startingScoreboard();
         else if (state == ArenaState.BUILDING)
-            scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+            scoreboard_lines = LanguageConfig.getInstance().scoreboard().buildingScoreboard();
         else if (state == ArenaState.SHOWING_BUILDS)
-            scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+            scoreboard_lines = LanguageConfig.getInstance().scoreboard().votingScoreboard();
         else if (state == ArenaState.SHOWING_WINNER)
-            scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+            scoreboard_lines = LanguageConfig.getInstance().scoreboard().winnerScoreboard();
 
         scoreboard_lines.stream()
                 .filter(Objects::nonNull)
                 .forEach(line -> {
-                    line = line
+                    lines.add(line.with(board.getPlayer())
                             .replace("%bb_version%", BuildBattle.getInstance().getVersion())
                             .replace("%theme%", theme)
                             .replace("%state%", state.toString())
                             .replace("%countdown%", String.valueOf(countdown))
-                            .replace("%winner%", winner.getDisplayName())
+                            .replace("%winner%", winner.displayName())
                             .replace("%minutes%", String.valueOf(minutes()))
                             .replace("%seconds%", String.valueOf(seconds()))
-                            .replace("%current_plot%", current_plot.owner.getDisplayName())
+                            .replace("%current_plot%", current_plot.owner.displayName())
                             .replace("%player_count%", String.valueOf(arena.players.size()))
-                            .replace("%arena%", arena.getName());
-                    lines.add(line);
+                            .replace("%arena%", arena.getName()));
                 });
         return lines;
     }

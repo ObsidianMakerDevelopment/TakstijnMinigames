@@ -8,6 +8,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
 import com.moyskleytech.mc.BuildBattle.scoreboard.api.PlaceholderFunction;
 import java.util.ArrayList;
 import org.bukkit.Bukkit;
@@ -41,7 +42,7 @@ public class Scoreboard {
     private UpdateCallback callback;
     private boolean updateTaskRunning;
     private Player player;
-    private List<String> lines;
+    private List<LanguagePlaceholder> lines;
     private PlaceholderFunction papiFunction;
     private final HashMap<String, Object> persistentPlaceholders;
 
@@ -67,7 +68,7 @@ public class Scoreboard {
         return new ScoreboardBuilder();
     }
 
-    public void setLines(List<String> lines) {
+    public void setLines(List<LanguagePlaceholder> lines) {
         if (lines == null || lines.isEmpty()) {
             return;
         }
@@ -80,12 +81,9 @@ public class Scoreboard {
     }
 
     public void setVisibility(final boolean visible) {
-        if (visible)
-        {
+        if (visible) {
             BoardPlayer.getBoardPlayer(player).attachConfigBoard(this.holder);
-        }
-        else
-        {
+        } else {
             BoardPlayer.getBoardPlayer(player).kill();
         }
         this.refresh();
@@ -93,31 +91,17 @@ public class Scoreboard {
 
     public void refresh() {
         if (lines != null) {
-            holder.setLines(lines.stream().map(l -> this.setPlaceholders(l)).collect(Collectors.toList()));
+            holder.setLines(lines);
         }
     }
 
-    private @NotNull String setPlaceholders(String content) {
-        Objects.requireNonNull(content, "Content cannot be null");
-        if (this.papiFunction != null) {
-            content = this.papiFunction.handleReplace(new PlaceholderData(this.player, this, content));
-        }
-        for (final Map.Entry<String, Object> entry : this.persistentPlaceholders.entrySet()) {
-            content = content.replace(entry.getKey(), entry.getValue().toString());
-        }
-        if (Bukkit.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            content = PlaceholderAPI.setPlaceholders(this.player, content);
-        }
-        return content;
-    }
-
-    public void setTitle(final String title, final boolean animate) {
+    public void setTitle(final LanguagePlaceholder title, final boolean animate) {
         Objects.requireNonNull(title, "Title cannot be null");
 
         this.holder.setTitle(List.of(title), ANIMATION_TASK_INTERVAL);
     }
 
-    public void setAnimatedTitle(final List<String> animatedTitle) {
+    public void setAnimatedTitle(final List<LanguagePlaceholder> animatedTitle) {
         if (animatedTitle == null || animatedTitle.isEmpty()) {
             throw new IllegalArgumentException("Animated title cannot be null or empty");
         }
@@ -140,30 +124,34 @@ public class Scoreboard {
         }
     }
 
-    public String makeUnique(String toUnique, final List<String> from) {
+    public LanguagePlaceholder makeUnique(LanguagePlaceholder toUnique, final List<LanguagePlaceholder> from) {
         if (toUnique == null) {
-            toUnique = " ";
+            toUnique = LanguagePlaceholder.of(" ");
         }
-        final StringBuilder stringBuilder = new StringBuilder(toUnique);
-        while (from.contains(stringBuilder.toString())
-                || (this.occupyMaxWidth && !from.contains(stringBuilder.toString()) && stringBuilder.length() < 40)) {
-            stringBuilder.append(" ");
+        LanguagePlaceholder toUniqueTmp = toUnique;
+        boolean contains = from.stream().anyMatch(lp -> lp.string().equals(toUniqueTmp.string()));
+        ;
+        while (contains
+                || (this.occupyMaxWidth && !contains && toUnique.string().length() < 40)) {
+            toUnique = toUnique.append(" ");
+            LanguagePlaceholder toUniqueTmp2 = toUnique;
+            contains = from.stream().anyMatch(lp -> lp.string().equals(toUniqueTmp2.string()));
         }
-        //if (stringBuilder.length() > 40) {
-        //    return stringBuilder.substring(0, 40);
-        //}
-        return stringBuilder.toString();
+        // if (stringBuilder.length() > 40) {
+        // return stringBuilder.substring(0, 40);
+        // }
+        return toUnique;
     }
 
-    public List<String> resizeContent(final List<String> lines) {
-        final ArrayList<String> newList = new ArrayList<String>();
+    public List<LanguagePlaceholder> resizeContent(final List<LanguagePlaceholder> lines) {
+        final ArrayList<LanguagePlaceholder> newList = new ArrayList<LanguagePlaceholder>();
         lines.forEach(line -> newList.add(this.makeUnique(line, newList)));
         if (newList.size() > 15) {
             return newList.subList(0, 15);
         }
         if (this.occupyMaxHeight) {
             while (newList.size() < 16) {
-                newList.add(this.makeUnique(" ", newList));
+                newList.add(this.makeUnique(LanguagePlaceholder.of(" "), newList));
             }
         }
         return newList;
@@ -175,6 +163,7 @@ public class Scoreboard {
         this.cancelTasks();
         ScoreboardManager.getInstance().removeFromCache(this.player.getUniqueId());
     }
+
     public void setObjective(String objectiveName) {
         holder.setObjective(objectiveName);
     }
@@ -240,5 +229,4 @@ public class Scoreboard {
         return player;
     }
 
-  
 }

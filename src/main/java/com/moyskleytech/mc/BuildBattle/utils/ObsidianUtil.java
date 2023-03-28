@@ -18,7 +18,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-
+import org.jetbrains.annotations.NotNull;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
@@ -191,17 +191,14 @@ public class ObsidianUtil {
     }
 
     public static Component component(Component text) {
-        return component(text, null);
+        return text;
     }
 
     public static Component component(Component text, Player p) {
-        return component(LegacyComponentSerializer.legacySection().serialize(text), p);
+        return text;
     }
 
-    public static Component component(String text, Player p) {
-        if (BuildBattle.getInstance().getExp() != null) {
-            text = BuildBattle.getInstance().getExp().process(text, p);
-        }
+    public static Component component(@NotNull String text, Player p) {
         return LegacyComponentSerializer.legacySection().deserialize(IridiumColorAPI.process(text));
     }
 

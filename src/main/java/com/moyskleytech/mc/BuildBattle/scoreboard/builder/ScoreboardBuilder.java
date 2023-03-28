@@ -11,6 +11,7 @@ import com.moyskleytech.mc.BuildBattle.scoreboard.api.PlaceholderFunction;
 import java.util.List;
 import org.bukkit.entity.Player;
 
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
 import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
 import java.util.Map;
 
@@ -23,10 +24,10 @@ public class ScoreboardBuilder
     private boolean occupyHeight;
     private long interval;
     private long animationInterval;
-    private String title;
+    private LanguagePlaceholder title;
     private String objectiveName ="";
-    private List<String> lines;
-    private List<String> animatedTitle;
+    private List<LanguagePlaceholder> lines;
+    private List<LanguagePlaceholder> animatedTitle;
     private PlaceholderFunction papiFunction;
     private UpdateCallback updateCallback;
     
@@ -50,17 +51,17 @@ public class ScoreboardBuilder
         return this;
     }
     
-    public ScoreboardBuilder lines(final List<String> lines) {
+    public ScoreboardBuilder lines(final List<LanguagePlaceholder> lines) {
         this.lines = lines;
         return this;
     }
         
-    public ScoreboardBuilder title(final String title) {
+    public ScoreboardBuilder title(final LanguagePlaceholder title) {
         this.title = title;
         return this;
     }
     
-    public ScoreboardBuilder animatedTitle(final List<String> title) {
+    public ScoreboardBuilder animatedTitle(final List<LanguagePlaceholder> title) {
         this.animatedTitle = title;
         return this;
     }

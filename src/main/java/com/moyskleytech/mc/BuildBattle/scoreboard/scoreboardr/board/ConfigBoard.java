@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
 
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
 import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
 import com.moyskleytech.mc.BuildBattle.scoreboard.scoreboardr.board.animations.Row;
 import com.moyskleytech.mc.BuildBattle.scoreboard.scoreboardr.board.implementations.WrapperBoard;
@@ -42,7 +43,7 @@ public class ConfigBoard extends BukkitRunnable {
     {
         this.objectiveName = objectiveName;
     }
-    public void setTitle(List<String> animation,long interval)
+    public void setTitle(List<LanguagePlaceholder> animation,long interval)
     {
         this.title = new Row(ScoreboardStrings.makeColoredStringList(animation), (int)interval);
     }
@@ -62,7 +63,7 @@ public class ConfigBoard extends BukkitRunnable {
         }*/
     }
 
-    public void setLines(List<String> lines)
+    public void setLines(List<LanguagePlaceholder> lines)
     {
         for (int i = 0; i < lines.size() && i < rows.size();i++)
         {

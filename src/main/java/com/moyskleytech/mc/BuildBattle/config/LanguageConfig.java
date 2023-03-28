@@ -17,15 +17,16 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ConfigGenerator.ConfigSection;
+import com.moyskleytech.mc.BuildBattle.game.Plot;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 
 import java.io.File;
 import java.util.*;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class LanguageConfig extends Service {
@@ -34,6 +35,19 @@ public class LanguageConfig extends Service {
         private Player p;
         private Component message;
 
+        public LanguagePlaceholder clone()
+        {
+            return LanguagePlaceholder.of(message).with(p);
+        }
+
+		public LanguagePlaceholder append(String string) {
+			return append(ObsidianUtil.component(string));
+		}
+        public LanguagePlaceholder append(Component string) {
+			LanguagePlaceholder newValue = clone();
+            newValue.message=newValue.message.append(string);
+            return newValue;
+		}
         public LanguagePlaceholder(Player p2) {
             this.p = p2;
         }
@@ -41,7 +55,14 @@ public class LanguageConfig extends Service {
         public LanguagePlaceholder(String p2) {
             this.message = ObsidianUtil.component(p2);
         }
+        public LanguagePlaceholder(Component p2) {
+            this.message = p2;
+        }
         public static LanguagePlaceholder of(String s)
+        {
+            return new LanguagePlaceholder(s);
+        }
+        public static LanguagePlaceholder of(Component s)
         {
             return new LanguagePlaceholder(s);
         }
@@ -62,6 +83,15 @@ public class LanguageConfig extends Service {
             return this;
         }
 
+        public LanguagePlaceholder replace(String string, String replacement) {
+            message=message.replaceText(builder-> builder.match(string).replacement(replacement).build());
+            return this;
+        }
+        public LanguagePlaceholder replace(String string, ComponentLike replacement) {
+            message=message.replaceText(builder-> builder.match(string).replacement(replacement).build());
+            return this;
+        }
+
         private Component placeholders(Component src) {
             Component process = src;
             var papi = BuildBattle.getInstance().papi();
@@ -77,6 +107,9 @@ public class LanguageConfig extends Service {
             }
             return process;
         }
+
+
+       
 
     }
 
@@ -186,14 +219,30 @@ public class LanguageConfig extends Service {
             return section.section("scoreboard")
             .key("animatedTitle").defValue(List.of("&eBuildBattle","&aBuildBattle"))
             .key("lobbyScoreboard").defValue(List.of("","Arena: %arena%","Players: %player_count%","","&7%bb_version%"))
+            .key("startingScoreboard").defValue(List.of("","Arena: %arena%","Theme: %theme%","","&7%bb_version%"))
+            .key("buildingScoreboard").defValue(List.of("","Arena: %arena%","Theme: %theme%","Time:%minutes%m%seconds%s","","&7%bb_version%"))
+            .key("votingScoreboard").defValue(List.of("","Arena: %arena%","Theme: %theme%","Plot of:%current_plot%","Voting time:%countdown%","","&7%bb_version%"))
+            .key("winnerScoreboard").defValue(List.of("","Arena: %arena%","Theme: %theme%","Winner:%winner%","Game ending in:%countdown%s","","&7%bb_version%"))
             .back();
         }
-        public List<String> animatedTitle()
+        public List<LanguagePlaceholder> animatedTitle()
         {
-            return getStringList("scoreboard.animatedTitle");
+            return getStringList("scoreboard.animatedTitle").stream().map(line->LanguagePlaceholder.of(line)).toList();
         }
-        public List<String> lobbyScoreboard() {
-            return getStringList("scoreboard.lobbyScoreboard");
+        public List<LanguagePlaceholder> lobbyScoreboard() {
+            return getStringList("scoreboard.lobbyScoreboard").stream().map(line->LanguagePlaceholder.of(line)).toList();
+        }
+        public List<LanguagePlaceholder> startingScoreboard() {
+            return getStringList("scoreboard.startingScoreboard").stream().map(line->LanguagePlaceholder.of(line)).toList();
+        }
+        public List<LanguagePlaceholder> buildingScoreboard() {
+            return getStringList("scoreboard.buildingScoreboard").stream().map(line->LanguagePlaceholder.of(line)).toList();
+        }
+        public List<LanguagePlaceholder> votingScoreboard() {
+            return getStringList("scoreboard.votingScoreboard").stream().map(line->LanguagePlaceholder.of(line)).toList();
+        }
+        public List<LanguagePlaceholder> winnerScoreboard() {
+            return getStringList("scoreboard.winnerScoreboard").stream().map(line->LanguagePlaceholder.of(line)).toList();
         }
     }
 

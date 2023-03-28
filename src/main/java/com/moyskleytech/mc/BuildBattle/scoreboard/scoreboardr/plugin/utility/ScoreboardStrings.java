@@ -3,6 +3,8 @@ package com.moyskleytech.mc.BuildBattle.scoreboard.scoreboardr.plugin.utility;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
 import com.moyskleytech.mc.BuildBattle.scoreboard.scoreboardr.plugin.Session;
 
 import java.util.ArrayList;
@@ -28,14 +30,16 @@ public class ScoreboardStrings {
         return result;
     }
 
-    public static List<String> makeColoredStringList(List<String> list) {
-        List<String> newList = new ArrayList<>();
+    public static List<LanguagePlaceholder> makeColoredStringList(List<LanguagePlaceholder> list) {
+        return list;
 
-        for (String str: list) {
-            newList.add(colors(str));
-        }
+        // List<LanguagePlaceholder> newList = new ArrayList<>();
 
-        return newList;
+        // for (LanguagePlaceholder str: list) {
+        //     newList.add(colors(str));
+        // }
+
+        // return newList;
     }
 
     public static String colors(String content) {
