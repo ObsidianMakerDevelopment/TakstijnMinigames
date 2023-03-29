@@ -55,12 +55,16 @@ public class TestCommand extends CommandManager.Command {
     @CommandPermission("obsidian.bb.test.paste")
     private void commandPaste(final  Player player) {
         Paster paster = Service.get(Paster.class);
-        paster.paste(pos1.get(player.getUniqueId()), pos2.get(player.getUniqueId()), 10, 10, 10);
+        paster.paste(pos1.get(player.getUniqueId()), pos2.get(player.getUniqueId()), 10, 10, 10).thenAccept(Void->{
+            player.sendMessage(ObsidianUtil.component("Completed pasting test"));
+        });
     }
     @CommandMethod("bb test unpaste")
     @CommandPermission("obsidian.bb.test.paste")
     private void commandUnpaste(final  Player player) {
         Paster paster = Service.get(Paster.class);
-        paster.unpaste(pos2.get(player.getUniqueId()), 10, 10, 10);
+        paster.unpaste(pos2.get(player.getUniqueId()), 10, 10, 10).thenAccept(Void->{
+            player.sendMessage(ObsidianUtil.component("Completed unpasting test"));
+        });
     }
 }
