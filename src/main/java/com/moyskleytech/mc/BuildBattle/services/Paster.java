@@ -55,10 +55,10 @@ public class Paster extends Service {
             @Override
             public void run() {
                 int blockPerTickAware = blockPerTick;
-                if(tickAware)
-                {
-                    blockPerTickAware = (int)Math.ceil((Bukkit.getTPS()[0]/20.0)*blockPerTick);
+                if (tickAware) {
+                    blockPerTickAware = (int) Math.ceil((Bukkit.getTPS()[0] / 20.0) * blockPerTick);
                 }
+                int blocks=0;
                 for (int i = 0; i < blockPerTickAware; i++) {
                     if (!iterator.hasNext())
                         break;
@@ -66,12 +66,15 @@ public class Paster extends Service {
                     Block dBlock = destination.clone().add(offset.getX(), offset.getY(), offset.getZ()).getBlock();
                     Block sBlock = source.clone().add(offset.getX(), offset.getY(), offset.getZ()).getBlock();
                     BlockState state = dBlock.getState();
+                    blocks++;
                     if (sBlock.getType() == Material.AIR)
                         i--;
                     else {
                         state.setBlockData(sBlock.getBlockData());
                         state.update(true, false);
                     }
+                    if (blocks > 4 * blockPerTickAware)
+                        break;
                 }
                 if (!iterator.hasNext()) {
                     paster.complete(null);
@@ -101,22 +104,25 @@ public class Paster extends Service {
             @Override
             public void run() {
                 int blockPerTickAware = blockPerTick;
-                if(tickAware)
-                {
-                    blockPerTickAware = (int)Math.ceil((Bukkit.getTPS()[0]/20.0)*blockPerTick);
+                if (tickAware) {
+                    blockPerTickAware = (int) Math.ceil((Bukkit.getTPS()[0] / 20.0) * blockPerTick);
                 }
+                int blocks = 0;
                 for (int i = 0; i < blockPerTickAware; i++) {
                     if (!iterator.hasNext())
                         break;
                     Location offset = iterator.next();
                     Block dBlock = destination.clone().add(offset.getX(), offset.getY(), offset.getZ()).getBlock();
                     BlockState state = dBlock.getState();
+                    blocks++;
                     if (state.getType() != Material.AIR) {
                         state.setType(Material.AIR);
-                        state.update(true,false);
+                        state.update(true, false);
                     } else {
                         i--;
                     }
+                    if (blocks > 4 * blockPerTickAware)
+                        break;
                 }
                 if (!iterator.hasNext()) {
                     paster.complete(null);

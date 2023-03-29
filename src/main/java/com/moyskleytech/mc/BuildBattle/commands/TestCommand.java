@@ -51,19 +51,25 @@ public class TestCommand extends CommandManager.Command {
     private void commandPos2(final  Player player) {
         pos2.put(player.getUniqueId(),player.getLocation());
     }
-    @CommandMethod("bb test paste")
+    @CommandMethod("bb test paste [width] [depth] [height]")
     @CommandPermission("obsidian.bb.test.paste")
-    private void commandPaste(final  Player player) {
+    private void commandPaste(final  Player player
+    , @Argument(value="width",defaultValue="10")int width
+    , @Argument(value="depth",defaultValue="10")int depth
+    , @Argument(value="height",defaultValue="10")int height) {
         Paster paster = Service.get(Paster.class);
-        paster.paste(pos1.get(player.getUniqueId()), pos2.get(player.getUniqueId()), 10, 10, 10).thenAccept(Void->{
+        paster.paste(pos1.get(player.getUniqueId()), pos2.get(player.getUniqueId()), width, depth, height).thenAccept(Void->{
             player.sendMessage(ObsidianUtil.component("Completed pasting test"));
         });
     }
-    @CommandMethod("bb test unpaste")
+    @CommandMethod("bb test unpaste [width] [depth] [height]")
     @CommandPermission("obsidian.bb.test.paste")
-    private void commandUnpaste(final  Player player) {
+    private void commandUnpaste(final  Player player
+    , @Argument(value="width",defaultValue="10")int width
+    , @Argument(value="depth",defaultValue="10")int depth
+    , @Argument(value="height",defaultValue="10")int height) {
         Paster paster = Service.get(Paster.class);
-        paster.unpaste(pos2.get(player.getUniqueId()), 10, 10, 10).thenAccept(Void->{
+        paster.unpaste(pos2.get(player.getUniqueId()), width, depth, height).thenAccept(Void->{
             player.sendMessage(ObsidianUtil.component("Completed unpasting test"));
         });
     }
