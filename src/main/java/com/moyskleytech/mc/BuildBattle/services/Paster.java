@@ -2,6 +2,7 @@ package com.moyskleytech.mc.BuildBattle.services;
 
 import java.util.concurrent.CompletableFuture;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -47,12 +48,18 @@ public class Paster extends Service {
         }
         CompletableFuture<Void> paster = new CompletableFuture<>();
         int blockPerTick = ObsidianConfig.getInstance().paster().blockPerTick();
+        boolean tickAware = ObsidianConfig.getInstance().paster().tickAware();
         BukkitTask task = new BukkitRunnable() {
             Iterator<Location> iterator = offsets.iterator();
 
             @Override
             public void run() {
-                for (int i = 0; i < blockPerTick; i++) {
+                int blockPerTickAware = blockPerTick;
+                if(tickAware)
+                {
+                    blockPerTickAware = (int)Math.ceil((Bukkit.getTPS()[0]/20.0)*blockPerTick);
+                }
+                for (int i = 0; i < blockPerTickAware; i++) {
                     if (!iterator.hasNext())
                         break;
                     Location offset = iterator.next();
@@ -87,17 +94,22 @@ public class Paster extends Service {
         }
         CompletableFuture<Void> paster = new CompletableFuture<>();
         int blockPerTick = ObsidianConfig.getInstance().paster().blockPerTick();
+        boolean tickAware = ObsidianConfig.getInstance().paster().tickAware();
         BukkitTask task = new BukkitRunnable() {
             Iterator<Location> iterator = offsets.iterator();
 
             @Override
             public void run() {
-                for (int i = 0; i < blockPerTick; i++) {
+                int blockPerTickAware = blockPerTick;
+                if(tickAware)
+                {
+                    blockPerTickAware = (int)Math.ceil((Bukkit.getTPS()[0]/20.0)*blockPerTick);
+                }
+                for (int i = 0; i < blockPerTickAware; i++) {
                     if (!iterator.hasNext())
                         break;
                     Location offset = iterator.next();
                     Block dBlock = destination.clone().add(offset.getX(), offset.getY(), offset.getZ()).getBlock();
-                    Logger.error("{}", dBlock.getLocation());
                     BlockState state = dBlock.getState();
                     if (state.getType() != Material.AIR) {
                         state.setType(Material.AIR);

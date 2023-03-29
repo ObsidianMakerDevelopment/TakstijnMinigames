@@ -169,11 +169,15 @@ public class ObsidianConfig extends Service {
         public static ConfigSection build(ConfigSection section) throws SerializationException {
             return section.section("paster")
                     .key("blockPerTick").defValue(10)
+                    .key("tickAware").defValue(true)
                     .back();
         }
 
         public int blockPerTick() {
             return getInt("paster.blockPerTick", 1).intValue();
+        }
+        public boolean tickAware() {
+            return getBoolean("paster.tickAware", true).booleanValue();
         }
     }
 }
