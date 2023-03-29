@@ -62,6 +62,7 @@ public class CommandManager extends Service {
         commands.add(new JoinCommand());
         commands.add(new ForceCommand());
         commands.add(new TestCommand());
+        commands.add(new ReloadCommand());
 
         commands.forEach(arg0 -> {
             try {
