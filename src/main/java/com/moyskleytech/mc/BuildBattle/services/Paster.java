@@ -36,7 +36,7 @@ public class Paster extends Service {
         for (int x = -width; x <= width; x++) {
             for (int y = -height; y <= height; y++) {
                 for (int z = -depth; z <= depth; z++) {
-                    offsets.add(new Location(null, x, y, z));
+                    offsets.add(new Location(source.getWorld(), x, y, z));
                 }
             }
         }
@@ -48,11 +48,13 @@ public class Paster extends Service {
                 for (int i = 0; i < blockPerTick; i++) {
                     if (offsets.size() == 0)
                         break;
-                    Block dBlock = destination.add(offsets.get(0)).getBlock();
-                    Block sBlock = source.add(offsets.get(0)).getBlock();
+                    Location offset = offsets.get(0);
+                    Block dBlock = destination.add(offset.getX(), offset.getY(), offset.getZ()).getBlock();
+                    Block sBlock = source.add(offset.getX(), offset.getY(), offset.getZ()).getBlock();
                     dBlock.setBlockData(sBlock.getBlockData(), false);
                     if (dBlock.getState() != null)
                         dBlock.getState().update();
+                    offsets.remove(0);
                 }
                 if (offsets.size() == 0) {
                     paster.complete(null);
@@ -69,7 +71,7 @@ public class Paster extends Service {
         for (int x = -width; x <= width; x++) {
             for (int y = -height; y <= height; y++) {
                 for (int z = -depth; z <= depth; z++) {
-                    offsets.add(new Location(null, x, y, z));
+                    offsets.add(new Location(destination.getWorld(), x, y, z));
                 }
             }
         }
@@ -81,10 +83,12 @@ public class Paster extends Service {
                 for (int i = 0; i < blockPerTick; i++) {
                     if (offsets.size() == 0)
                         break;
-                    Block b = destination.add(offsets.get(0)).getBlock();
+                    Location offset = offsets.get(0);
+                    Block b = destination.add(offset.getX(), offset.getY(), offset.getZ()).getBlock();
                     b.setType(Material.AIR);
                     if (b.getState() != null)
                         b.getState().update();
+                    offsets.remove(0);
                 }
                 if (offsets.size() == 0) {
                     paster.complete(null);

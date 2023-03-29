@@ -13,6 +13,7 @@ import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.service.Service.ServiceLoadException;
 import com.moyskleytech.mc.BuildBattle.services.Data;
+import com.moyskleytech.mc.BuildBattle.services.Paster;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
 import com.moyskleytech.mc.BuildBattle.utils.Logger.Level;
 
@@ -76,6 +77,7 @@ public class BuildBattle extends JavaPlugin {
         registeredServices.add(new LanguageConfig(this));
 
         registeredServices.add(new CommandManager());
+        registeredServices.add(new Paster());
         registeredServices.add(new JoinLeaveListener());
         registeredServices.add(new Arenas());
         registeredServices.add(new TickService());

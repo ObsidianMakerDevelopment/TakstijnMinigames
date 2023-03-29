@@ -90,6 +90,7 @@ tasks {
 
     // Process Placeholders for the plugin.yml
     processResources {
+        from("src/resources")
         filesMatching("**/plugin.yml") {
             expand(rootProject.project.properties)
         }
