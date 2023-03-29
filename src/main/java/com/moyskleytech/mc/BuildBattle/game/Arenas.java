@@ -14,6 +14,7 @@ import javax.swing.Action;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
@@ -144,11 +145,15 @@ public class Arenas extends Service implements Listener {
         }
     }
 
-    private Arena byName(String map) {
+    public Arena byName(String map) {
         return arenas.stream().filter(ar -> ar.getName().equalsIgnoreCase(map)).findAny().orElse(null);
     }
 
-    private Arena byId(UUID map) {
+    public Arena byId(UUID map) {
         return arenas.stream().filter(ar -> ar.getId().equals(map)).findAny().orElse(null);
     }
+
+	public @NonNull List<String> names() {
+		return arenas.stream().map(arena->arena.getName()).toList();
+	}
 }

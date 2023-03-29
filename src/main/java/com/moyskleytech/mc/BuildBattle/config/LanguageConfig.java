@@ -4,6 +4,8 @@ import com.moyskleytech.mc.BuildBattle.utils.Logger;
 
 import net.md_5.bungee.api.ChatColor;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
+
+import org.apache.maven.model.Build;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -24,6 +26,8 @@ import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 import java.io.File;
 import java.util.*;
 import java.util.regex.Pattern;
+
+import javax.annotation.Nonnull;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -95,9 +99,9 @@ public class LanguageConfig extends Service {
         private Component placeholders(Component src) {
             Component process = src;
             var papi = BuildBattle.getInstance().papi();
-            process= process.replaceText(builder-> builder.match("%prefix").replacement(ObsidianConfig.getInstance().prefix()).build());
+            process= process.replaceText(builder-> builder.match("%prefix%").replacement(ObsidianConfig.getInstance().prefix()).build());
             if(p!=null)
-                process=process.replaceText(builder-> builder.match("%prefix").replacement(p.displayName()).build());
+                process=process.replaceText(builder-> builder.match("%target%").replacement(p.displayName()).build());
             if (papi != null)
             {
                 var pattern = Pattern.compile("[%]([^%]+)[%]");
@@ -121,7 +125,7 @@ public class LanguageConfig extends Service {
         return new LanguagePlaceholder(p);
     }
 
-    public JavaPlugin plugin;
+    public BuildBattle plugin;
     public File dataFolder;
     public File langFolder, shopFolder, gamesInventoryFolder;
 
@@ -129,7 +133,7 @@ public class LanguageConfig extends Service {
     private YamlConfigurationLoader loader;
     private ConfigGenerator generator;
 
-    public LanguageConfig(JavaPlugin plugin) {
+    public LanguageConfig(BuildBattle plugin) {
         super();
         this.plugin = plugin;
     }
@@ -164,18 +168,11 @@ public class LanguageConfig extends Service {
 
             generator = new ConfigGenerator(loader, configurationNode);
             ConfigSection section = generator.start()
-                    .key("version").defValue(plugin.getDescription().getVersion())
-                    .section("transaction")
-                    .key("deposit").defValue("%logo% &aDeposited %amount% %ore%")
-                    .key("withdraw").defValue("%logo% &bWithdrew %amount% %ore%")
-                    .back()
-                    .key("above-zero").defValue("%logo% &cAmount must be above 0")
-                    .key("missing-ore").defValue("%logo% &cYou do not have the required %amount% %ore%")
-                    .key("invalid-ore").defValue("%logo% &c%ore% is not a valid bank ore")
-                    .key("missing-space")
-                    .defValue("%logo% &cYou do not have enough place in inventory for %amount% %ore%");
+                    .key("version").defValue(plugin.getVersion());
 
             ErrorMessages.build(section);
+            EditorMessages.build(section);
+            ScoreboardConfig.build(section);
 
             generator.saveIfModified();
         } catch (Exception ex) {
@@ -187,18 +184,43 @@ public class LanguageConfig extends Service {
         return new ErrorMessages();
     }
 
+    public EditorMessages editor() {
+        return new EditorMessages();
+    }
+    public class EditorMessages {
+
+        public static ConfigSection build(ConfigSection section) throws SerializationException {
+            return section.section("editor")
+            .key("nowInEdition").defValue("%prefix% %arena% is now in edition mode")
+            .key("saved").defValue("%prefix% %arena% has been saved and is ready to be played")
+            .back();
+        }
+        public LanguagePlaceholder nowInEdition(String name)
+        {
+            return LanguagePlaceholder.of(getString("editor.nowInEdition")).replace("%arena%", name);
+        }
+        public LanguagePlaceholder saved(String name)
+        {
+            return LanguagePlaceholder.of(getString("editor.saved")).replace("%arena%", name);
+        }
+    }
     public class ErrorMessages {
 
         public static ConfigSection build(ConfigSection section) throws SerializationException {
             return section.section("error")
-            .key("non_existing_map").defValue("There is no map for the specified name")
-            .key("arena_already_registered").defValue("The arena is already registered")
-            .key("not_playing").defValue("You are not currently in a game")
+            .key("non_existing_map").defValue("%prefix%§cThere is no map for the specified name")
+            .key("arena_already_registered").defValue("%prefix%§cThe arena is already registered")
+            .key("not_playing").defValue("%prefix%§cYou are not currently in a game")
+            .key("nothingToSave").defValue("%prefix%§cThere is nothing to save")
             .back();
         }
         public LanguagePlaceholder nonExistingMap()
         {
             return LanguagePlaceholder.of(getString("error.non_existing_map"));
+        }
+        public LanguagePlaceholder nonExistingMap(String name)
+        {
+            return nonExistingMap().replace("%arena%",name);
         }
         public LanguagePlaceholder arenaAlreadyRegistered()
         {
@@ -207,6 +229,10 @@ public class LanguageConfig extends Service {
         public LanguagePlaceholder notPlaying()
         {
             return LanguagePlaceholder.of(getString("error.not_playing"));
+        }
+        public LanguagePlaceholder nothingToSave()
+        {
+            return LanguagePlaceholder.of(getString("error.nothingToSave"));
         }
     }
     public ScoreboardConfig scoreboard() {
@@ -290,10 +316,10 @@ public class LanguageConfig extends Service {
     public Boolean getBoolean(String path, boolean def) {
         return node((Object[]) path.split("\\.")).getBoolean(def);
     }
-
-    public String getString(String path) {
-        return IridiumColorAPI.process(ChatColor.translateAlternateColorCodes('&',
-                Objects.requireNonNull(node((Object[]) path.split("\\.")).getString())));
+    @SuppressWarnings("all")
+    public String getString(@Nonnull String path) {
+        return ChatColor.translateAlternateColorCodes('&',
+                Objects.requireNonNull(node((Object[]) path.split("\\.")).getString()));
     }
 
     public String getString(String path, String def) {
@@ -303,6 +329,8 @@ public class LanguageConfig extends Service {
         }
         return str;
     }
+
+    
 
   
 }

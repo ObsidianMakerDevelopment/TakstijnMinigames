@@ -3,6 +3,9 @@ package com.moyskleytech.mc.BuildBattle.config;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ConfigGenerator.ConfigSection;
 import com.moyskleytech.mc.BuildBattle.service.Service;
+import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
+
+import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
 
@@ -157,8 +160,8 @@ public class ObsidianConfig extends Service {
         return str;
     }
 
-    public String prefix() {
-        return getString("prefix");
+    public Component prefix() {
+        return ObsidianUtil.component(getString("prefix"));
     }
 
     public PasterConfig paster() {

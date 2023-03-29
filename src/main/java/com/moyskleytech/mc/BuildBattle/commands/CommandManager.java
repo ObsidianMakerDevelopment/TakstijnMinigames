@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.Function;
+import com.moyskleytech.mc.BuildBattle.game.Arenas;
 
 @Getter
 public class CommandManager extends Service {
@@ -63,6 +64,7 @@ public class CommandManager extends Service {
         commands.add(new ForceCommand());
         commands.add(new TestCommand());
         commands.add(new ReloadCommand());
+        commands.add(new AdminCommand());
 
         commands.forEach(arg0 -> {
             try {
@@ -131,6 +133,12 @@ public class CommandManager extends Service {
                 commandMetaFunction);
         annotationParser.parse(this);
 
+        Arenas arenas = Service.get(Arenas.class);
+        CommandManager.getInstance().getManager().getParserRegistry().registerSuggestionProvider("arenas",
+                (commandSenderCommandContext, s) -> {
+                    return arenas.names();
+                });
+
         commands.forEach(arg0 -> {
             try {
                 arg0.onLoad();
@@ -140,7 +148,7 @@ public class CommandManager extends Service {
         });
     }
 
-    @CommandMethod("obsidian help [query]")
+    @CommandMethod("bb help [query]")
     @CommandDescription("Help menu")
     private void commandHelp(
             final  CommandSender sender,

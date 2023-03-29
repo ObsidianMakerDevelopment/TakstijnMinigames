@@ -25,7 +25,7 @@ public class ReloadCommand extends CommandManager.Command {
         init = true;
     }
 
-    @CommandMethod("obsidian reload")
+    @CommandMethod("bb reload")
     @CommandPermission("obsidian.bb.admin")
     private void commandReload(final @NotNull Player player) {
         BuildBattle.getInstance().reload();
