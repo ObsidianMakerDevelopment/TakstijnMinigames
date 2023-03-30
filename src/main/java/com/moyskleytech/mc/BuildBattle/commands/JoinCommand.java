@@ -40,14 +40,14 @@ public class JoinCommand extends CommandManager.Command {
 
     @CommandMethod("bb join <arena>")
     @CommandPermission("obsidian.bb.join")
-    private void commandJoin(final  Player player, final @Argument("arena") String map) {
+    private void commandJoin(final  Player player, final @Argument(value = "arena", suggestions = "arenas") String map) {
         Arenas arenas = Service.get(Arenas.class);
         arenas.join(player, map);
     }
 
     @CommandMethod("bb joinnew <arena>")
     @CommandPermission("obsidian.bb.joinnew")
-    private void commandJoinNew(final  Player player, final @Argument("arena") String map) {
+    private void commandJoinNew(final  Player player, final @Argument(value = "arena", suggestions = "arenas") String map) {
         Arenas arenas = Service.get(Arenas.class);
         arenas.join(player, map,false);
     }

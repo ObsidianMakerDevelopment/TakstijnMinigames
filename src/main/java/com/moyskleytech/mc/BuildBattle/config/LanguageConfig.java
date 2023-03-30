@@ -193,6 +193,12 @@ public class LanguageConfig extends Service {
             return section.section("editor")
             .key("nowInEdition").defValue("%prefix% %arena% is now in edition mode")
             .key("saved").defValue("%prefix% %arena% has been saved and is ready to be played")
+            .key("teleportedLobby").defValue("%prefix% You have been teleported to %arena%'s lobby")
+            .key("teleportedSchematic").defValue("%prefix% You have been teleported to %arena%'s schematic")
+            .key("arenaHasNoLobby").defValue("%prefix% %arena%'s lobby is not set")
+            .key("arenaHasNoSchematic").defValue("%prefix% %arena%'s schematic is not set")
+            .key("renamed").defValue("%prefix% %previous% has been renamed to %arena%")
+            .key("changed").defValue("%prefix% %arena%'s %value% has been changed")
             .back();
         }
         public LanguagePlaceholder nowInEdition(String name)
@@ -202,6 +208,30 @@ public class LanguageConfig extends Service {
         public LanguagePlaceholder saved(String name)
         {
             return LanguagePlaceholder.of(getString("editor.saved")).replace("%arena%", name);
+        }
+        public LanguagePlaceholder teleportedLobby(String name)
+        {
+            return LanguagePlaceholder.of(getString("editor.teleportedLobby")).replace("%arena%", name);
+        }
+         public LanguagePlaceholder teleportedSchematic(String name)
+        {
+            return LanguagePlaceholder.of(getString("editor.teleportedSchematic")).replace("%arena%", name);
+        }
+
+        public LanguagePlaceholder arenaHasNoLobby(String name)
+        {
+            return LanguagePlaceholder.of(getString("editor.arenaHasNoLobby")).replace("%arena%", name);
+        }
+         public LanguagePlaceholder arenaHasNoSchematic(String name)
+        {
+            return LanguagePlaceholder.of(getString("editor.arenaHasNoSchematic")).replace("%arena%", name);
+        }
+        public LanguagePlaceholder renamed(String oldName, String newName) {
+            return LanguagePlaceholder.of(getString("editor.renamed")).replace("%previous%", newName).replace("%arena%", newName);
+
+        }
+        public LanguagePlaceholder changed(String name, String string) {
+            return LanguagePlaceholder.of(getString("editor.changed")).replace("%value%", string).replace("%arena%", name);
         }
     }
     public class ErrorMessages {

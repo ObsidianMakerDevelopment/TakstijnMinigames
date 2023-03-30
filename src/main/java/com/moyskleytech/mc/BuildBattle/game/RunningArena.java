@@ -57,7 +57,8 @@ public class RunningArena {
 
     public CompletableFuture<Void> pasteLobby() {
         blockMovement = true;
-        CompletableFuture<Void> pasting = Service.get(Paster.class).paste(arena.lobbyCenter, world.getSpawnLocation(),
+        CompletableFuture<Void> pasting = Service.get(Paster.class).paste(arena.lobbyCenter.toBukkit(),
+                world.getSpawnLocation(),
                 arena.lobbySize, arena.lobbySize, arena.lobbyHeight);
 
         pasting = pasting.thenAccept(e -> blockMovement = false);
@@ -66,6 +67,7 @@ public class RunningArena {
     }
 
     public void stop() {
+        players.forEach(this::leave);
         BuildBattle.getInstance().deleteWorld(this.world);
         Arenas arenas = Service.get(Arenas.class);
         arenas.removeRunning(this);
@@ -79,6 +81,9 @@ public class RunningArena {
 
             // teleport to lobby
             return p.teleportAsync(world.getSpawnLocation()).thenApply(teleport -> {
+                p.setGameMode(GameMode.ADVENTURE);
+                p.setAllowFlight(true);
+                p.setFlying(true);
                 return teleport;
             });
         }
@@ -101,6 +106,8 @@ public class RunningArena {
         arenas.put(p, null);
 
         ScoreboardManager.getInstance().fromCache(p.getUniqueId()).ifPresent(scoreboard -> scoreboard.destroy());
+
+        // TODO: Teleport leave player to main lobby
     }
 
     private void setState(ArenaState state) {
@@ -144,7 +151,7 @@ public class RunningArena {
                         (CompletableFuture<Boolean>[]) teleports.toArray()).thenAccept(ignored_teleport -> {
                             Paster paster = Service.get(Paster.class);
                             Object[] plotPasting = plots.values().stream().map(plot -> {
-                                return paster.paste(arena.plotSchematicCenter, plot.center,
+                                return paster.paste(arena.plotSchematicCenter.toBukkit(), plot.center,
                                         arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
                                         arena.plotHeight);
                             }).toArray();
@@ -162,9 +169,24 @@ public class RunningArena {
             preventBuildDestroy = false;
             blockMovement = false;
             countdown = arena.getGameDuration();
+
+            players.forEach(
+                    player -> {
+                        // Teleport players to plots
+                        player.setGameMode(GameMode.CREATIVE);
+                        player.setAllowFlight(true);
+                        player.setFlying(true);
+                    });
         }
         if (state == ArenaState.SHOWING_BUILDS) {
             preventBuildDestroy = true;
+            players.forEach(
+                    player -> {
+                        // Teleport players to plots
+                        player.setGameMode(GameMode.CREATIVE);
+                        player.setAllowFlight(true);
+                        player.setFlying(true);
+                    });
             countdown = arena.getVoteDuration();
             voteIndex = 0;
             plotsToVote = plots.values().iterator();
@@ -173,7 +195,13 @@ public class RunningArena {
         if (state == ArenaState.SHOWING_WINNER) {
             // TODO: Show Score, if present
             preventBuildDestroy = true;
-
+            players.forEach(
+                player -> {
+                    // Teleport players to plots
+                    player.setGameMode(GameMode.CREATIVE);
+                    player.setAllowFlight(true);
+                    player.setFlying(true);
+                });
             // Start countdown for next stage
             countdown = arena.getWinnerDuration();
             if (winner != null) {
@@ -192,7 +220,13 @@ public class RunningArena {
         }
         if (state == ArenaState.ENDING) {
             blockMovement = true;
-
+            players.forEach(
+                player -> {
+                    // Teleport players to plots
+                    player.setGameMode(GameMode.CREATIVE);
+                    player.setAllowFlight(true);
+                    player.setFlying(true);
+                });
             Paster paster = Service.get(Paster.class);
             // Unpaste all plots
             Object[] plotPasting = plots.values().stream().map(plot -> {

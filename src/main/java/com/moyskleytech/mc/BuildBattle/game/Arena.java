@@ -20,8 +20,8 @@ public class Arena {
     public int plotHeight=40;
     public String name = "arena";
     public int contourSize = 5;
-    public Location plotSchematicCenter;
-    public Location lobbyCenter;
+    public LocationDB plotSchematicCenter;
+    public LocationDB lobbyCenter;
     public int lobbySize=10;
     public int lobbyHeight=10;
     public int lobbyDuration=60;

@@ -145,16 +145,9 @@ public class CommandManager extends Service {
             } catch (ServiceLoadException e) {
                 e.printStackTrace();
             }
+            catch (Throwable e) {
+                e.printStackTrace();
+            }
         });
     }
-
-    @CommandMethod("bb help [query]")
-    @CommandDescription("Help menu")
-    private void commandHelp(
-            final  CommandSender sender,
-            final @Argument("query") @Greedy String query) {
-        sender.sendMessage("commandHelp");
-        minecraftHelp.queryCommands(query == null ? "" : query, sender);
-    }
-
 }
