@@ -15,7 +15,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
@@ -111,7 +113,6 @@ public class RunningArena {
 
         ScoreboardManager.getInstance().fromCache(p.getUniqueId()).ifPresent(scoreboard -> scoreboard.destroy());
 
-
         p.teleport(ObsidianUtil.getMainLobby());
     }
 
@@ -201,12 +202,12 @@ public class RunningArena {
             // TODO: Show Score, if present
             preventBuildDestroy = true;
             players.forEach(
-                player -> {
-                    // Teleport players to plots
-                    player.setGameMode(GameMode.CREATIVE);
-                    player.setAllowFlight(true);
-                    player.setFlying(true);
-                });
+                    player -> {
+                        // Teleport players to plots
+                        player.setGameMode(GameMode.CREATIVE);
+                        player.setAllowFlight(true);
+                        player.setFlying(true);
+                    });
             // Start countdown for next stage
             countdown = arena.getWinnerDuration();
             if (winner != null) {
@@ -226,12 +227,12 @@ public class RunningArena {
         if (state == ArenaState.ENDING) {
             blockMovement = true;
             players.forEach(
-                player -> {
-                    // Teleport players to plots
-                    player.setGameMode(GameMode.CREATIVE);
-                    player.setAllowFlight(true);
-                    player.setFlying(true);
-                });
+                    player -> {
+                        // Teleport players to plots
+                        player.setGameMode(GameMode.CREATIVE);
+                        player.setAllowFlight(true);
+                        player.setFlying(true);
+                    });
             Paster paster = Service.get(Paster.class);
             // Unpaste all plots
             Object[] plotPasting = plots.values().stream().map(plot -> {
@@ -336,10 +337,11 @@ public class RunningArena {
                             .replace("%theme%", theme)
                             .replace("%state%", state.toString())
                             .replace("%countdown%", String.valueOf(countdown))
-                            .replace("%winner%", winner!=null?winner.displayName():Component.empty())
+                            .replace("%winner%", winner != null ? winner.displayName() : Component.empty())
                             .replace("%minutes%", String.valueOf(minutes()))
                             .replace("%seconds%", String.valueOf(seconds()))
-                            .replace("%current_plot%", current_plot!=null? current_plot.owner.displayName():Component.empty())
+                            .replace("%current_plot%",
+                                    current_plot != null ? current_plot.owner.displayName() : Component.empty())
                             .replace("%player_count%", String.valueOf(arena.players.size()))
                             .replace("%arena%", arena.getName()));
                 });
@@ -352,5 +354,15 @@ public class RunningArena {
 
     public int minutes() {
         return countdown / 60;
+    }
+
+    public boolean belongToPlot(@NotNull Block block) {
+        return plots.values().stream().anyMatch(plot->{
+            double dx = Math.abs(block.getX() - plot.center.getX());
+            double dy = Math.abs(block.getY() - plot.center.getY());
+            double dz = Math.abs(block.getZ() - plot.center.getZ());
+
+            return dx <= arena.plotSize && dz <= arena.plotSize && dy <= arena.plotHeight;
+        });
     }
 }

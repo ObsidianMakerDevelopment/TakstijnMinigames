@@ -25,6 +25,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.inventory.*;
 
 public class JoinLeaveListener extends Service implements Listener {
 
@@ -103,6 +104,18 @@ public class JoinLeaveListener extends Service implements Listener {
         if (a.isArena(event.getLocation().getWorld())) {
             if (event.getEntity() instanceof LivingEntity living)
                 living.setAI(false);
+        }
+    }
+
+    @EventHandler
+    public void InventoryMoveItemEvent(InventoryMoveItemEvent event) {
+        Arenas a = Service.get(Arenas.class);
+        Player player = (Player) event.getInitiator().getViewers().get(0);
+        RunningArena arena = a.getArenaForPlayer(player);
+        if (arena!=null)
+        {
+            if(arena.isPreventBuildDestroy())
+                event.setCancelled(true);
         }
     }
 
