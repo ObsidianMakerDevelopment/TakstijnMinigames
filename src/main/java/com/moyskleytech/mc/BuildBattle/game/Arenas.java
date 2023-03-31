@@ -19,6 +19,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.Data;
+import com.moyskleytech.mc.BuildBattle.utils.Logger;
 
 public class Arenas extends Service implements Listener {
     private List<Arena> arenas;
@@ -27,18 +28,22 @@ public class Arenas extends Service implements Listener {
     private File arenasFolder;
 
     public List<Arena> getArenas() {
+        Logger.trace("Arenas::getArenas()");
         return new ArrayList<>(arenas);
     }
 
     public List<RunningArena> getRunningArenas() {
+        //Logger.trace("Arenas::getRunningArenas()");
         return new ArrayList<>(runningArenas);
     }
 
     public void addRunning(RunningArena arena) {
+        Logger.trace("Arenas::addRunning({})",arena);
         runningArenas.add(arena);
     }
 
     public void removeRunning(RunningArena arena) {
+        Logger.trace("Arenas::removeRunning({})",arena);
         runningArenas.remove(arena);
     }
 
@@ -65,6 +70,7 @@ public class Arenas extends Service implements Listener {
     }
 
     public ActionResult register(Arena a) {
+        Logger.trace("Arenas::register({})",a);
         Data data = Service.get(Data.class);
         if (byId(a.getId()) != null) {
             return ActionResult.failure(ActionResult.ARENA_ALREADY_REGISTERED);
@@ -76,6 +82,8 @@ public class Arenas extends Service implements Listener {
     }
 
     public ActionResult save(Arena a) {
+        Logger.trace("Arenas::save({})",a);
+
         if (!register(a).isSuccess()) {
             Data data = Service.get(Data.class);
             File arenaFile = new File(arenasFolder, a.getId().toString() + ".yml");
@@ -86,12 +94,16 @@ public class Arenas extends Service implements Listener {
 
     @Override
     public void onUnload() {
+        Logger.trace("Arenas::onUnload()");
+
         getRunningArenas().forEach(arena -> arena.stop());
         arenaForPlayer.clear();
         super.onUnload();
     }
 
     public void put(Player p, RunningArena runningArena) {
+        Logger.trace("Arenas::put({},{})",p,runningArena);
+
         if (runningArena == null)
             arenaForPlayer.remove(p);
         else
@@ -99,14 +111,18 @@ public class Arenas extends Service implements Listener {
     }
 
     public RunningArena getArenaForPlayer(Player p) {
+        //Logger.trace("Arenas::getArenaForPlayer({})",p);
+
         return arenaForPlayer.get(p);
     }
 
     public boolean isArena(World w) {
+        //Logger.trace("Arenas::isArena({})",w);
         return runningArenas.stream().anyMatch(arena -> arena.world.equals(w));
     }
 
     public ActionResult joinRandomly(Player player) {
+        Logger.trace("Arenas::joinRandomly({})",player);
 
         Optional<RunningArena> joinable = runningArenas.stream().filter(ra -> ra.state == ArenaState.LOBBY).findAny();
         if (joinable.isPresent()) {
@@ -124,10 +140,13 @@ public class Arenas extends Service implements Listener {
     }
 
     public ActionResult join(Player player, String map) {
+        Logger.trace("Arenas::join({},{})",player,map);
+
         return join(player, map, true);
     }
 
     public ActionResult join(Player player, String map, boolean allowExisting) {
+        Logger.trace("Arenas::join({},{},{})",player,map,allowExisting);
 
         Optional<RunningArena> joinable = runningArenas.stream()
                 .filter(ra -> ra.state == ArenaState.LOBBY && ra.arena.getName().equals(map)).findAny();
@@ -146,14 +165,20 @@ public class Arenas extends Service implements Listener {
     }
 
     public Arena byName(String map) {
+        Logger.trace("Arenas::byName({})",map);
+
         return arenas.stream().filter(ar -> ar.getName().equalsIgnoreCase(map)).findAny().orElse(null);
     }
 
     public Arena byId(UUID map) {
+        Logger.trace("Arenas::byId({})",map);
+
         return arenas.stream().filter(ar -> ar.getId().equals(map)).findAny().orElse(null);
     }
 
 	public @NonNull List<String> names() {
+        Logger.trace("Arenas::names()");
+
 		return arenas.stream().map(arena->arena.getName()).toList();
 	}
 }

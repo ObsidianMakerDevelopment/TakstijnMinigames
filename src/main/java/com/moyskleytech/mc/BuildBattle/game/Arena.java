@@ -33,7 +33,7 @@ public class Arena {
     {
         Arenas arenas = Service.get(Arenas.class);
         
-        World world = BuildBattle.getInstance().createEmptyWorld(type, name+"_"+arenas.getRunningArenas().size());
+        World world = BuildBattle.getInstance().createEmptyWorld(type, name+"_"+UUID.randomUUID());
         RunningArena running = new RunningArena(this,world);
 
         arenas.addRunning(running);

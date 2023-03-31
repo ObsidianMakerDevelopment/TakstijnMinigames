@@ -6,6 +6,8 @@ import com.moyskleytech.mc.BuildBattle.game.Arena;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.game.LocationDB;
 import com.moyskleytech.mc.BuildBattle.service.Service;
+import com.moyskleytech.mc.BuildBattle.utils.Logger;
+import com.moyskleytech.mc.BuildBattle.utils.Logger.Level;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -80,6 +82,14 @@ public class AdminCommand extends CommandManager.Command {
         }
         arenas.save(wip);
         player.sendMessage(LanguageConfig.getInstance().editor().saved(wip.name).component());
+    }
+
+    @CommandMethod("bb admin debug")
+    @CommandPermission("obsidian.bb.admin.debug")
+    private void commandDebug(final Player player) {
+       Logger.setMode(Level.ALL);
+       player.sendMessage("[Testing]Now in debug mode");
+
     }
 
     @CommandMethod("bb admin set lobby")

@@ -52,7 +52,7 @@ public class BuildBattleExpansion extends PlaceholderExpansion {
                             return arena.getState().toString();
                         case "winner":
                             if (arena.getWinner() == null)
-                                return null;
+                                return "";
                             return arena.getWinner().getDisplayName();
                         case "countdown":
                             return String.valueOf(arena.getCountdown());

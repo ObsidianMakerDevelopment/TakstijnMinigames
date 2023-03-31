@@ -69,7 +69,7 @@ public class CommandManager extends Service {
         commands.forEach(arg0 -> {
             try {
                 arg0.onPreload();
-            } catch (ServiceLoadException e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
             }
         });
@@ -87,7 +87,7 @@ public class CommandManager extends Service {
         commands.forEach(arg0 -> {
             try {
                 arg0.onReload();
-            } catch (ServiceLoadException e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
             }
         });
@@ -115,7 +115,7 @@ public class CommandManager extends Service {
         if (manager.queryCapability(CloudBukkitCapabilities.BRIGADIER)) {
             try {
                 manager.registerBrigadier();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Logger.error("Could not register Brigadier :: \r{}", e.getCause().getCause());
             }
         }

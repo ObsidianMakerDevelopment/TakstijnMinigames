@@ -1,8 +1,11 @@
 package com.moyskleytech.mc.BuildBattle.commands;
 
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
+import com.moyskleytech.mc.BuildBattle.game.ActionResult;
 import com.moyskleytech.mc.BuildBattle.game.Arena;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
+import com.moyskleytech.mc.BuildBattle.game.RunningArena;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 
 import java.util.Collections;
@@ -35,7 +38,21 @@ public class JoinCommand extends CommandManager.Command {
     @CommandPermission("obsidian.bb.autojoin")
     private void commandAutojoin(final  Player player) {
         Arenas arenas = Service.get(Arenas.class);
-        arenas.joinRandomly(player);
+        ActionResult result = arenas.joinRandomly(player);
+        if(!result.isSuccess())
+        {
+            player.sendMessage(LanguageConfig.getInstance().getString(result.getErrorKey()));
+        }
+    }
+
+    @CommandMethod("bb leave")
+    private void commandLeave(final  Player player) {
+        Arenas arenas = Service.get(Arenas.class);
+        RunningArena arena = arenas.getArenaForPlayer(player);
+        if(arena == null)
+            player.sendMessage(LanguageConfig.getInstance().error().notPlaying().with(player).component());
+        else
+            arena.leave(player);
     }
 
     @CommandMethod("bb join <arena>")

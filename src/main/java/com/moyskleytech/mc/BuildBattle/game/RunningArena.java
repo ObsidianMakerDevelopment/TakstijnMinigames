@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -23,8 +24,10 @@ import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
 import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.Paster;
+import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
 
 @SuppressWarnings("unchecked")
 @Getter
@@ -68,9 +71,9 @@ public class RunningArena {
 
     public void stop() {
         players.forEach(this::leave);
-        BuildBattle.getInstance().deleteWorld(this.world);
         Arenas arenas = Service.get(Arenas.class);
         arenas.removeRunning(this);
+        BuildBattle.getInstance().deleteWorld(this.world);
     }
 
     public CompletableFuture<Boolean> join(Player p) {
@@ -84,6 +87,7 @@ public class RunningArena {
                 p.setGameMode(GameMode.ADVENTURE);
                 p.setAllowFlight(true);
                 p.setFlying(true);
+                createScoreboard(p);
                 return teleport;
             });
         }
@@ -107,7 +111,8 @@ public class RunningArena {
 
         ScoreboardManager.getInstance().fromCache(p.getUniqueId()).ifPresent(scoreboard -> scoreboard.destroy());
 
-        // TODO: Teleport leave player to main lobby
+
+        p.teleport(ObsidianUtil.getMainLobby());
     }
 
     private void setState(ArenaState state) {
@@ -331,10 +336,10 @@ public class RunningArena {
                             .replace("%theme%", theme)
                             .replace("%state%", state.toString())
                             .replace("%countdown%", String.valueOf(countdown))
-                            .replace("%winner%", winner.displayName())
+                            .replace("%winner%", winner!=null?winner.displayName():Component.empty())
                             .replace("%minutes%", String.valueOf(minutes()))
                             .replace("%seconds%", String.valueOf(seconds()))
-                            .replace("%current_plot%", current_plot.owner.displayName())
+                            .replace("%current_plot%", current_plot!=null? current_plot.owner.displayName():Component.empty())
                             .replace("%player_count%", String.valueOf(arena.players.size()))
                             .replace("%arena%", arena.getName()));
                 });

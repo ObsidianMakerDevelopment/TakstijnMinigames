@@ -20,11 +20,13 @@ import com.moyskleytech.mc.BuildBattle.utils.Logger.Level;
 import lombok.Getter;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -130,9 +132,27 @@ public class BuildBattle extends JavaPlugin {
 
     public void deleteWorld(World world) {
         File toDelete = world.getWorldFolder();
-        Bukkit.unloadWorld(world, false);
-        deleteWorld(toDelete);
-        worlds.remove(world);
+        if (Bukkit.unloadWorld(world, false)) {
+            Chunk[] chunks = world.getLoadedChunks();
+            for (Chunk chunk : chunks) {
+                chunk.unload(false);
+            }
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    try {
+                        deleteWorld(toDelete);
+                        worlds.remove(world);
+                        this.cancel();
+                    } catch (Throwable t) {
+
+                    }
+                }
+            }.runTaskTimer(this, 1000, 1000);
+
+        } else {
+            Logger.error("Could not delete world {}", world);
+        }
     }
 
     public boolean deleteWorld(File path) {

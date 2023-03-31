@@ -73,12 +73,10 @@ public class LanguageConfig extends Service {
 
         public Component component() {
             Component c = ObsidianUtil.component(placeholders(message));
-            Logger.trace("Loaded translation for {}={}", message, c);
             return c;
         }
         public String string() {
             Component c = placeholders(message);
-            Logger.trace("Loaded translation for {}={}", message, c);
             return LegacyComponentSerializer.legacySection().serialize(c);
         }
 
@@ -88,7 +86,9 @@ public class LanguageConfig extends Service {
         }
 
         public LanguagePlaceholder replace(String string, String replacement) {
-            message=message.replaceText(builder-> builder.match(string).replacement(replacement).build());
+            if(replacement==null) replacement="";
+            String replacementString = replacement;
+            message=message.replaceText(builder-> builder.match(string).replacement(replacementString).build());
             return this;
         }
         public LanguagePlaceholder replace(String string, ComponentLike replacement) {

@@ -249,4 +249,10 @@ public class ObsidianUtil {
                 return gm.toString();
         }
     }
+
+    public static @NotNull Location getMainLobby() {
+        // TODO: Teleport leave player to main lobby, maybe lobby from config, otherwise world 0
+
+        return Bukkit.getWorlds().get(0).getSpawnLocation();
+    }
 }
