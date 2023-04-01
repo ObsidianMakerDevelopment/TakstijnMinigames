@@ -21,8 +21,6 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import lombok.Getter;
-
 public class WorldPool extends Service {
 
     private Object lock = new Object();
