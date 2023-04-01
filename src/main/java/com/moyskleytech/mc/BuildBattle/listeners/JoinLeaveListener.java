@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
+import com.moyskleytech.mc.BuildBattle.game.ArenaState;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.game.RunningArena;
 import com.moyskleytech.mc.BuildBattle.service.Service;
@@ -23,6 +24,9 @@ import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.inventory.*;
@@ -112,10 +116,44 @@ public class JoinLeaveListener extends Service implements Listener {
         Arenas a = Service.get(Arenas.class);
         Player player = (Player) event.getInitiator().getViewers().get(0);
         RunningArena arena = a.getArenaForPlayer(player);
-        if (arena!=null)
-        {
-            if(arena.isPreventBuildDestroy())
+        if (arena != null) {
+            if (arena.isPreventBuildDestroy())
                 event.setCancelled(true);
+        }
+    }
+
+    
+    @EventHandler
+    public void PlayerInteractAtEntityEvent(PlayerInteractAtEntityEvent event) {
+        Arenas a = Service.get(Arenas.class);
+        Player player = (Player) event.getPlayer();
+        RunningArena arena = a.getArenaForPlayer(player);
+        if (arena != null) {
+            if (arena.getState() == ArenaState.SHOWING_BUILDS) {
+                Player p = event.getPlayer();
+                int slot = p.getInventory().getHeldItemSlot();
+                if (slot <= 6) {
+                    arena.getCurrent_plot().vote.put(p.getUniqueId(), slot - 1);
+                    event.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void PlayerInteractEntityEvent(PlayerInteractEntityEvent event) {
+        Arenas a = Service.get(Arenas.class);
+        Player player = (Player) event.getPlayer();
+        RunningArena arena = a.getArenaForPlayer(player);
+        if (arena != null) {
+            if (arena.getState() == ArenaState.SHOWING_BUILDS) {
+                Player p = event.getPlayer();
+                int slot = p.getInventory().getHeldItemSlot();
+                if (slot <= 6) {
+                    arena.getCurrent_plot().vote.put(p.getUniqueId(), slot - 1);
+                    event.setCancelled(true);
+                }
+            }
         }
     }
 
