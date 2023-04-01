@@ -3,6 +3,7 @@ package com.moyskleytech.mc.BuildBattle.config;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ConfigGenerator.ConfigSection;
 import com.moyskleytech.mc.BuildBattle.service.Service;
+import com.moyskleytech.mc.BuildBattle.services.Data;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 
 import net.kyori.adventure.text.Component;
@@ -35,7 +36,6 @@ public class ObsidianConfig extends Service {
     private ConfigurationNode configurationNode;
     private YamlConfigurationLoader loader;
     private ConfigGenerator generator;
-
     public ObsidianConfig(BuildBattle plugin) {
         super();
         this.plugin = plugin;
@@ -187,5 +187,9 @@ public class ObsidianConfig extends Service {
         public boolean tickAware() {
             return getBoolean("paster.tickAware", true).booleanValue();
         }
+    }
+
+    public VoteItem getVoteItem(int i) {
+        return Data.getInstance().getItems().voteItems.get(i);
     }
 }

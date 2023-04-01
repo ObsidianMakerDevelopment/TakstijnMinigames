@@ -139,8 +139,7 @@ public class RunningArena {
         if (state == ArenaState.LOBBY) {
             VotingUI vi = votingUIs.get(p.getUniqueId());
             vi.removeVote();
-            if(vi!=null)
-            {
+            if (vi != null) {
                 votingUIs.remove(p.getUniqueId());
                 votingUIs.values().forEach(ovi -> {
                     vi.detach(ovi);
@@ -163,13 +162,11 @@ public class RunningArena {
             countdown = arena.getLobbyDuration();
         }
         if (state == ArenaState.STARTING) {
-            int index=0,max=0;
-            for(int i=0;i<voting.size();i++)
-            {
-                if(voting.get(i).intValue() > max)
-                {
+            int index = 0, max = 0;
+            for (int i = 0; i < voting.size(); i++) {
+                if (voting.get(i).intValue() > max) {
                     max = voting.get(i).intValue();
-                    index=i;
+                    index = i;
                 }
             }
             theme = themes.get(index);
@@ -301,9 +298,14 @@ public class RunningArena {
     private void showBuildForVote() {
         current_plot = plotsToVote.next();
         // Teleport players to plots, 1 by one
-        players.forEach(player -> player.teleport(current_plot.center));
+        players.forEach(player -> {
+            player.teleport(current_plot.center);
+            // TODO: Put voting items in player hotbars
+            player.getInventory().clear();
+            for(int i=0;i<6;i++)
+                player.getInventory().setItem(i,  ObsidianConfig.getInstance().getVoteItem(i).forPlayer(player).build());
+        });
 
-        // TODO: Put voting items in player hotbars
     }
 
     public void tick() {
@@ -389,7 +391,11 @@ public class RunningArena {
                             .replace("%state%", state.toString())
                             .replace("%countdown%", String.valueOf(countdown))
                             .replace("%winner%", winner != null ? winner.displayName() : Component.empty())
-                            .replace("%winnerscore%", winner != null ? ObsidianUtil.component(String.valueOf(plots.get(winner.getUniqueId()).getScore())) : Component.empty())
+                            .replace("%winnerscore%",
+                                    winner != null
+                                            ? ObsidianUtil.component(
+                                                    String.valueOf(plots.get(winner.getUniqueId()).getScore()))
+                                            : Component.empty())
                             .replace("%minutes%", String.valueOf(minutes()))
                             .replace("%seconds%", String.valueOf(seconds()))
                             .replace("%current_plot%",

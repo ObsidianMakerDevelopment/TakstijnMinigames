@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
+import com.moyskleytech.mc.BuildBattle.config.VotingItems;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.obsidian.material.ObsidianMaterialKeyDeserializer;
 
@@ -17,6 +18,8 @@ import lombok.Getter;
 public class Data extends Service {
     @Getter
     ObjectMapper objectMapper;
+    @Getter
+    private VotingItems items;
 
     public static Data getInstance()
     {
@@ -211,6 +214,9 @@ public class Data extends Service {
                 t.printStackTrace();
             }
         }
+
+        items = load(VotingItems.class);
+        save(items);
     }
 
 }

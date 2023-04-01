@@ -51,7 +51,8 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.13.1")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1")
-    
+    implementation("com.github.cryptomorin:XSeries:9.3.1") { isTransitive = false }
+
     // Other dependencies that are not required or already available at runtime
     compileOnly("org.purpurmc.purpur:purpur-api:1.19.3-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.9.2")
