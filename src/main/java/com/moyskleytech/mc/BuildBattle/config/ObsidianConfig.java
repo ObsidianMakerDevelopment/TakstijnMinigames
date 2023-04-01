@@ -74,6 +74,7 @@ public class ObsidianConfig extends Service {
             ConfigSection config = generator.start()
                     .key("version").defValue(plugin.getVersion())
                     .key("prefix").defValue("&f[<RAINBOW1>BuildBattle</RAINBOW>&f]")
+                    .key("themes").defValue(List.of("Car","Boat","Cat","Snowman"))
                     ;
             PasterConfig.build(config);
 
@@ -83,6 +84,10 @@ public class ObsidianConfig extends Service {
         }
     }
 
+    public List<String> themes()
+    {
+        return getStringList("themes");
+    }
     public void forceReload() {
         loadDefaults();
     }

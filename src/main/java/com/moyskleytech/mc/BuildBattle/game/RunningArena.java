@@ -1,6 +1,7 @@
 package com.moyskleytech.mc.BuildBattle.game;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -21,11 +22,13 @@ import org.jetbrains.annotations.NotNull;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
+import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
 import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
 import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.Paster;
+import com.moyskleytech.mc.BuildBattle.ui.VotingUI;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 
 import lombok.Getter;
@@ -39,6 +42,9 @@ public class RunningArena {
     ArenaState state = ArenaState.LOBBY;
     List<Player> players = new ArrayList<>();
     Map<UUID, Plot> plots = new HashMap<>();
+    Map<UUID, VotingUI> votingUIs = new HashMap<>();
+    List<AtomicInteger> voting = new ArrayList<>();
+    List<String> themes = new ArrayList<>();
 
     boolean blockMovement = false;
     boolean preventBuildDestroy = false;
@@ -58,6 +64,15 @@ public class RunningArena {
         this.world = world;
 
         setState(ArenaState.LOBBY);
+
+        List<String> tmpList = new ArrayList<>(ObsidianConfig.getInstance().themes());
+        Collections.shuffle(tmpList);
+        for (int i = 0; i < 5; i++) {
+            if (i < tmpList.size()) {
+                themes.add(tmpList.get(0));
+                voting.add(new AtomicInteger());
+            }
+        }
     }
 
     public CompletableFuture<Void> pasteLobby() {
@@ -90,6 +105,16 @@ public class RunningArena {
                 p.setAllowFlight(true);
                 p.setFlying(true);
                 createScoreboard(p);
+
+                VotingUI vi = new VotingUI(p, themes, voting);
+                votingUIs.values().forEach(ovi -> {
+                    vi.attach(ovi);
+                    ovi.attach(vi);
+                });
+                votingUIs.put(p.getUniqueId(), vi);
+
+                p.openInventory(vi.getInventory());
+
                 return teleport;
             });
         }
@@ -111,6 +136,19 @@ public class RunningArena {
         Arenas arenas = Service.get(Arenas.class);
         arenas.put(p, null);
 
+        if (state == ArenaState.LOBBY) {
+            VotingUI vi = votingUIs.get(p.getUniqueId());
+            vi.removeVote();
+            if(vi!=null)
+            {
+                votingUIs.remove(p.getUniqueId());
+                votingUIs.values().forEach(ovi -> {
+                    vi.detach(ovi);
+                    ovi.detach(vi);
+                });
+            }
+        }
+
         ScoreboardManager.getInstance().fromCache(p.getUniqueId()).ifPresent(scoreboard -> scoreboard.destroy());
 
         p.teleport(ObsidianUtil.getMainLobby());
@@ -125,6 +163,17 @@ public class RunningArena {
             countdown = arena.getLobbyDuration();
         }
         if (state == ArenaState.STARTING) {
+            int index=0,max=0;
+            for(int i=0;i<voting.size();i++)
+            {
+                if(voting.get(i).intValue() > max)
+                {
+                    max = voting.get(i).intValue();
+                    index=i;
+                }
+            }
+            theme = themes.get(index);
+
             preventBuildDestroy = true;
             blockMovement = true;
             CompletableFuture<Void> unpasteLobby = Service.get(Paster.class).unpaste(world.getSpawnLocation(),
@@ -200,6 +249,8 @@ public class RunningArena {
         }
         if (state == ArenaState.SHOWING_WINNER) {
             // TODO: Show Score, if present
+            // BIG CHAT MESSAGE WITH EVERYONE SCORE
+
             preventBuildDestroy = true;
             players.forEach(
                     player -> {
@@ -338,6 +389,7 @@ public class RunningArena {
                             .replace("%state%", state.toString())
                             .replace("%countdown%", String.valueOf(countdown))
                             .replace("%winner%", winner != null ? winner.displayName() : Component.empty())
+                            .replace("%winnerscore%", winner != null ? ObsidianUtil.component(String.valueOf(plots.get(winner.getUniqueId()).getScore())) : Component.empty())
                             .replace("%minutes%", String.valueOf(minutes()))
                             .replace("%seconds%", String.valueOf(seconds()))
                             .replace("%current_plot%",
@@ -357,7 +409,7 @@ public class RunningArena {
     }
 
     public boolean belongToPlot(@NotNull Block block) {
-        return plots.values().stream().anyMatch(plot->{
+        return plots.values().stream().anyMatch(plot -> {
             double dx = Math.abs(block.getX() - plot.center.getX());
             double dy = Math.abs(block.getY() - plot.center.getY());
             double dz = Math.abs(block.getZ() - plot.center.getZ());

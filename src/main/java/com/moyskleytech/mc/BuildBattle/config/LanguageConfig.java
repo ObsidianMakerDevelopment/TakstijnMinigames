@@ -173,6 +173,7 @@ public class LanguageConfig extends Service {
             ErrorMessages.build(section);
             EditorMessages.build(section);
             ScoreboardConfig.build(section);
+            UiConfig.build(section);
 
             generator.saveIfModified();
         } catch (Exception ex) {
@@ -232,6 +233,37 @@ public class LanguageConfig extends Service {
         }
         public LanguagePlaceholder changed(String name, String string) {
             return LanguagePlaceholder.of(getString("editor.changed")).replace("%value%", string).replace("%arena%", name);
+        }
+    }
+    public UiConfig ui() {
+        return new UiConfig();
+    }
+    public class UiConfig {
+        public static ConfigSection build(ConfigSection section) throws SerializationException {
+            return section.section("error")
+            .key("voting_title").defValue("%prefix%Voting for map")
+            .key("vote_item_name").defValue("<RAINBOW1>%theme%</RAINBOW>")
+            .key("vote_lore").defValue(List.of(
+                "Vote for theme &b%theme%",
+                "",
+                "Time remaining %countdown%",
+                "Current votes: %votes%",
+                "",
+                "&eClick to vote &b%theme%!"
+            ))
+            .back();
+        }
+        public LanguagePlaceholder votingTitle()
+        {
+            return LanguagePlaceholder.of(getString("ui.voting_title"));
+        }
+        public LanguagePlaceholder votingItemName()
+        {
+            return LanguagePlaceholder.of(getString("ui.vote_item_name"));
+        }
+        public List<LanguagePlaceholder> votingLore()
+        {
+            return getStringList("ui.vote_lore").stream().map(line->LanguagePlaceholder.of(line)).toList();
         }
     }
     public class ErrorMessages {
@@ -359,6 +391,8 @@ public class LanguageConfig extends Service {
         }
         return str;
     }
+
+   
 
     
 

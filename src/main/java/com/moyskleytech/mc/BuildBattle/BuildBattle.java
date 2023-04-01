@@ -7,6 +7,7 @@ import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.game.TickService;
 import com.moyskleytech.mc.BuildBattle.generator.VoidGen;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
+import com.moyskleytech.mc.BuildBattle.listeners.ArenaProtection;
 import com.moyskleytech.mc.BuildBattle.listeners.JoinLeaveListener;
 import com.moyskleytech.mc.BuildBattle.placeholderapi.BuildBattleExpansion;
 import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
@@ -81,6 +82,7 @@ public class BuildBattle extends JavaPlugin {
         registeredServices.add(new CommandManager());
         registeredServices.add(new Paster());
         registeredServices.add(new JoinLeaveListener());
+        registeredServices.add(new ArenaProtection());
         registeredServices.add(new Arenas());
         registeredServices.add(new TickService());
         registeredServices.add(new ScoreboardManager());
