@@ -9,6 +9,7 @@ import org.bukkit.World.Environment;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
+import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 
 import lombok.Getter;
 
@@ -32,8 +33,9 @@ public class Arena {
     public RunningArena start()
     {
         Arenas arenas = Service.get(Arenas.class);
+        WorldPool worlds = Service.get(WorldPool.class);
         
-        World world = BuildBattle.getInstance().createEmptyWorld(type, name+"_"+UUID.randomUUID());
+        World world = worlds.getWorld(type);
         RunningArena running = new RunningArena(this,world);
 
         arenas.addRunning(running);

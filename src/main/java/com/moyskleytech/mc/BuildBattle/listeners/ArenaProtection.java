@@ -7,24 +7,11 @@ import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.game.RunningArena;
+import com.moyskleytech.mc.BuildBattle.generator.VoidGen;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 
-import io.papermc.paper.event.entity.EntityDamageItemEvent;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByBlockEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.block.*;
 
 public class ArenaProtection extends Service implements Listener {
@@ -115,18 +102,6 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockFadeEvent(BlockFadeEvent event) {
-        Arenas a = Service.get(Arenas.class);
-        if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
-                    .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
-            if (arena != null) {
-                event.setCancelled(true);
-            }
-        }
-    }
-
-    @EventHandler
-    public void BlockPistonEvent(BlockPistonEvent event) {
         Arenas a = Service.get(Arenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
             RunningArena arena = a.getRunningArenas().stream()
@@ -251,5 +226,14 @@ public class ArenaProtection extends Service implements Listener {
         }
     }
 
-    
+    @EventHandler
+    public void WorldInitEvent(org.bukkit.event.world.WorldInitEvent event) {
+        if (event.getWorld().getGenerator() instanceof VoidGen)
+        {
+            event.getWorld().setKeepSpawnInMemory(false);
+            event.getWorld().setAutoSave(false);
+            event.getWorld().setSpawnLocation(0, 64, 0);
+        }
+    }
+
 }

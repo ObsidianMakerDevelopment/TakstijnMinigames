@@ -15,19 +15,31 @@ import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.service.Service.ServiceLoadException;
 import com.moyskleytech.mc.BuildBattle.services.Data;
 import com.moyskleytech.mc.BuildBattle.services.Paster;
+import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
+import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 import com.moyskleytech.mc.BuildBattle.utils.Logger.Level;
 
 import lombok.Getter;
+import net.kyori.adventure.util.TriState;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Difficulty;
+import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.WorldType;
+import org.bukkit.World.Environment;
+import org.bukkit.block.Biome;
+import org.bukkit.entity.SpawnCategory;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.generator.BiomeProvider;
+import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -78,6 +90,7 @@ public class BuildBattle extends JavaPlugin {
         registeredServices.add(new Data());
         registeredServices.add(new ObsidianConfig(this));
         registeredServices.add(new LanguageConfig(this));
+        registeredServices.add(new WorldPool());
 
         registeredServices.add(new CommandManager());
         registeredServices.add(new Paster());
@@ -101,10 +114,27 @@ public class BuildBattle extends JavaPlugin {
         long begin = System.nanoTime();
         WorldCreator worldCreator = new WorldCreator(name)
                 .generator(chunkGenerator)
+                .keepSpawnLoaded(TriState.FALSE)
                 .environment(environment);
         World w = Bukkit.createWorld(worldCreator);
+        w.setDifficulty(Difficulty.NORMAL);
+        w.setSpawnFlags(true,true);
+        w.setPVP(false);
+        w.setStorm(false);
+        w.setThundering(false);
+        w.setWeatherDuration(Integer.MAX_VALUE);
+        w.setKeepSpawnInMemory(false);
+        w.setTicksPerSpawns(SpawnCategory.ANIMAL, 1);
+        w.setTicksPerSpawns(SpawnCategory.MONSTER, 1);
         w.setAutoSave(false);
-        w.setSpawnLocation(0, 64, 0);
+        w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+        w.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+        w.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
+        w.setGameRule(GameRule.DO_FIRE_TICK, false);
+        w.setGameRule(GameRule.MOB_GRIEFING, false);
+        w.setGameRule(GameRule.DO_MOB_SPAWNING, false);
+        w.setGameRule(GameRule.DROWNING_DAMAGE, false);
+
         Logger.trace("Created world in " + (System.nanoTime() - begin) + " nanoseconds");
         worlds.add(w);
         return w;
@@ -134,9 +164,14 @@ public class BuildBattle extends JavaPlugin {
 
     public void deleteWorld(World world) {
         File toDelete = world.getWorldFolder();
+        world.getPlayers().forEach(player->player.teleport(ObsidianUtil.getMainLobby()));
+        Chunk[] chunks = world.getLoadedChunks();
+        for (Chunk chunk : chunks) {
+            chunk.unload(false);
+        }
         if (Bukkit.unloadWorld(world, false)) {
-            Chunk[] chunks = world.getLoadedChunks();
-            for (Chunk chunk : chunks) {
+            Chunk[] chunkss = world.getLoadedChunks();
+            for (Chunk chunk : chunkss) {
                 chunk.unload(false);
             }
             new BukkitRunnable() {
@@ -150,7 +185,7 @@ public class BuildBattle extends JavaPlugin {
 
                     }
                 }
-            }.runTaskTimer(this, 1000, 1000);
+            }.runTaskTimer(this, 50, 100);
 
         } else {
             Logger.error("Could not delete world {}", world);
@@ -263,5 +298,7 @@ public class BuildBattle extends JavaPlugin {
     public JavaPlugin getJavaPlugin() {
         return instance;
     }
+
+   
 
 }

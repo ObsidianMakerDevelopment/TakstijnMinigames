@@ -18,6 +18,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
@@ -28,6 +29,7 @@ import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
 import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.Paster;
+import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 import com.moyskleytech.mc.BuildBattle.ui.VotingUI;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 
@@ -36,7 +38,7 @@ import net.kyori.adventure.text.Component;
 
 @SuppressWarnings("unchecked")
 @Getter
-public class RunningArena {
+public class RunningArena implements Listener {
     World world;
     Arena arena;
     ArenaState state = ArenaState.LOBBY;
@@ -56,7 +58,7 @@ public class RunningArena {
     private Plot current_plot;
 
     public String getName() {
-        return world.getName();
+        return arena.getName();
     }
 
     public RunningArena(Arena arena, World world) {
@@ -73,6 +75,8 @@ public class RunningArena {
                 voting.add(new AtomicInteger());
             }
         }
+
+        BuildBattle.getInstance().registerListener(this);
     }
 
     public CompletableFuture<Void> pasteLobby() {
@@ -87,10 +91,11 @@ public class RunningArena {
     }
 
     public void stop() {
+        BuildBattle.getInstance().unregisterListener(this);
         players.forEach(this::leave);
         Arenas arenas = Service.get(Arenas.class);
         arenas.removeRunning(this);
-        BuildBattle.getInstance().deleteWorld(this.world);
+        WorldPool.getInstance().freeWorld(this.world);
     }
 
     public CompletableFuture<Boolean> join(Player p) {

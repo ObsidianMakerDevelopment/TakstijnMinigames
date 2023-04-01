@@ -1,6 +1,8 @@
 package com.moyskleytech.mc.BuildBattle.generator;
 
+import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.generator.ChunkGenerator;
 import org.jetbrains.annotations.Nullable;
 import com.moyskleytech.obsidian.material.ObsidianMaterial;
@@ -14,83 +16,17 @@ import java.util.Random;
 
 public class VoidGen extends ChunkGenerator {
 
-    /**
-     * Returns whether the main material returned by {@link IridiumChunkGenerator#getMainMaterial(World)}
-     * should be ignored.
-     *
-     * @return if the main material should be ignored
-     */
-    public boolean ignoreMainMaterial() {
-        return getMainMaterial(null) == ObsidianMaterial.valueOf("AIR");
-    }
-
-    public byte[][] blockSections;
-
-    /**
-     * Generates an empty chunk.
-     *
-     * @param world     The world that we try to generate
-     * @param random    A random which should be used. We don't need this
-     * @param chunkX    The x position of the chunk
-     * @param chunkZ    The y position of the chunk
-     * @param biomeGrid The biome grid of the chunk
-     * @return The data of this chunk. None all the time to generate void
-     */
     @Override
-    public @NotNull ChunkData generateChunkData(@NotNull World world, @NotNull Random random, int chunkX, int chunkZ, @NotNull BiomeGrid biomeGrid) {
-        return createChunkData(world);
+    public @NotNull ChunkData generateChunkData(@NotNull World world, @NotNull Random random, int chunkx, int chunkz,
+            @NotNull BiomeGrid biomegrid) {
+        ChunkData chunkData = Bukkit.getServer().createChunkData(world);
+        int min = world.getMinHeight();
+        int max = world.getMaxHeight();
+        Biome biome = Biome.THE_VOID;
+        for (int x = 0; x < 16; x++)
+            for (int z = 0; z < 16; z++)
+                for (int y = min; y < max; y += 4)
+                    biomegrid.setBiome(x, y, z, biome);
+        return chunkData;
     }
-
-    /**
-     * Provides the block sections of this generator to Bukkit.
-     *
-     * @param world     The world that we try to generate
-     * @param random    A random which should be used. We don't need this
-     * @param x         The x position of the chunk
-     * @param z         The y position of the chunk
-     * @param biomeGrid The biome grid of the chunk
-     * @return The block sections of this world
-     */
-    public byte[][] generateBlockSections(World world, Random random, int x, int z, BiomeGrid biomeGrid) {
-        if (blockSections == null) {
-            blockSections = new byte[world.getMaxHeight() / 16][];
-        }
-        return blockSections;
-    }
-
-    /**
-     * Tells Bukkit that we always want entities to spawn.
-     *
-     * @param world The world the entity wants to spawn in
-     * @param x     The x location of the spawning attempt
-     * @param z     The z location of the spawning attempt
-     * @return true because we always want entities to spawn
-     */
-    @Override
-    public boolean canSpawn(@NotNull World world, int x, int z) {
-        return true;
-    }
-
-    /**
-     * Tells Bukkit that we never want any block populators.
-     *
-     * @param world The world where the {@link BlockPopulator}s should be in
-     * @return Always an empty list because we don't want any
-     */
-    @Override
-    public @NotNull List<BlockPopulator> getDefaultPopulators(@NotNull World world) {
-        return Collections.emptyList();
-    }
-
-    /**
-     * Returns what a made with this generator is mainly consisting of.<p>
-     * Used for performance improvements.
-     *
-     * @param world the world that should be checked
-     * @return the most used material of the chunk generator in this generator
-     */
-    public ObsidianMaterial getMainMaterial(@Nullable World world) {
-        return ObsidianMaterial.valueOf("AIR");
-    }
-
 }
