@@ -130,6 +130,31 @@ public class JoinLeaveListener extends Service implements Listener {
     }
 
     @EventHandler
+    public void PlayerInteractEvent(PlayerInteractEvent event) {
+        Arenas a = Service.get(Arenas.class);
+        Player player = (Player) event.getPlayer();
+        RunningArena arena = a.getArenaForPlayer(player);
+        if (arena != null) {
+            if (arena.getState() == ArenaState.SHOWING_BUILDS) {
+                Player p = event.getPlayer();
+                int slot = p.getInventory().getHeldItemSlot();
+                if (slot <= 6) {
+                    arena.getCurrent_plot().vote.put(p.getUniqueId(), slot - 1);
+                    p.sendMessage(LanguageConfig.getInstance().voted().with(p).component());
+
+                    try {
+                        Sound musicDisc = Sound.sound(Key.key("entity.cat.hiss"), Sound.Source.MUSIC, 1f, 1f);
+                        p.playSound(musicDisc);
+                    } catch (Throwable t) {
+
+                    }
+                    event.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    @EventHandler
     public void PlayerInteractAtEntityEvent(PlayerInteractAtEntityEvent event) {
         Arenas a = Service.get(Arenas.class);
         Player player = (Player) event.getPlayer();
