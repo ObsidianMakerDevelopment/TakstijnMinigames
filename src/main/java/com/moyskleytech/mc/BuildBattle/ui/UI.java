@@ -39,9 +39,9 @@ public abstract class UI implements InventoryHolder {
 
     @Override
     public Inventory getInventory() {
-        // TODO: Title
+        Logger.trace("getInventory::createInventory({},{})->{}",getSize(), getTitle(), inventory);
         inventory = Bukkit.createInventory(this, getSize(), getTitle());
-
+        Logger.trace("getInventory::createInventory({},{})->{}",getSize(), getTitle(), inventory);
         updateUI(true);
 
         return inventory;
