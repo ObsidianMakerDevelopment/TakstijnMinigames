@@ -46,12 +46,14 @@ public class VotingUI extends UI {
 
             List<Component> lore = LanguageConfig
                     .getInstance().ui().votingLore().stream().map(lore_line -> (Component) lore_line.with(getPlayer())
-                            .replace("%theme%", theme).replace("%votes%", String.valueOf(votePercentage)).component())
+                            .replace("%theme%", theme).replace("%votes%",
+                                    String.format("%.1f", votePercentage))
+                            .component())
                     .toList();
             ItemStack votingItem = withTitleAndLore(Material.SPRUCE_SIGN, item_name, lore, 1);
             inventory.setItem(i * 9, votingItem);
 
-            ItemStack bar = withTitleAndLore(Material.IRON_BARS, Component.empty(), lore,1);
+            ItemStack bar = withTitleAndLore(Material.IRON_BARS, Component.empty(), lore, 1);
 
             inventory.setItem(i * 9 + 1, bar);
 
@@ -59,20 +61,20 @@ public class VotingUI extends UI {
             for (int idx = 0; idx < 7; idx++) {
                 ItemStack pane = withTitleAndLore(
                         idx < number_green ? Material.GREEN_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
-                        item_name, lore,1);
+                        item_name, lore, 1);
                 inventory.setItem(i * 9 + 2 + idx, pane);
             }
         }
     }
 
     public void removeVote() {
-        if (currentVote != null)
-        {
+        if (currentVote != null) {
             voteCounts.get(currentVote.intValue()).decrementAndGet();
-            currentVote=null;
+            currentVote = null;
         }
     }
 
+    @Override
     public void click(InventoryClickEvent event) {
         event.setCancelled(true);
         if (currentVote != null)

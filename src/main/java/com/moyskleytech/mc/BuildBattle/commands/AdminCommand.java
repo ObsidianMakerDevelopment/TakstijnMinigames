@@ -86,7 +86,7 @@ public class AdminCommand extends CommandManager.Command {
 
     @CommandMethod("bb admin debug")
     @CommandPermission("obsidian.bb.admin.debug")
-    private void commandDebug(final Player player) {
+    private void commandDebug(final CommandSender player) {
        Logger.setMode(Level.ALL);
        player.sendMessage("[Testing]Now in debug mode");
 

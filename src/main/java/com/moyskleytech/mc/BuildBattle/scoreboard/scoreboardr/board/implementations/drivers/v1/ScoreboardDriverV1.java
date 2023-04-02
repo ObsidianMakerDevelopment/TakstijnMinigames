@@ -68,14 +68,14 @@ public class ScoreboardDriverV1 implements IBoard {
         }
 
         Team team = board.getTeam(line + "");
-        String[] split = split(content);
+        String[] split = split(ChatColor.values()[line]+content);
 
         assert team != null;
 
-        team.prefix(ObsidianUtil.component(split[0]));
-        team.suffix(ObsidianUtil.component(split[1]));
-        //team.setPrefix(split[0]);
-        //team.setSuffix(split[1]);
+        //team.prefix(ObsidianUtil.component(split[0]));
+        //team.suffix(ObsidianUtil.component(split[1]));
+        team.setPrefix(split[0]);
+        team.setSuffix(split[1]);
     }
 
     private String[] split(String line) {
@@ -161,7 +161,7 @@ public class ScoreboardDriverV1 implements IBoard {
     @Override
     public void setObjective(String objectiveName) {
         if (objectiveName == null)
-            objectiveName = "sbascoreboard";
+            objectiveName = "buildbattle";
         /*if (this.board != null)
         {
             this.objective = this.board.registerNewObjective(objectiveName, "dummy");

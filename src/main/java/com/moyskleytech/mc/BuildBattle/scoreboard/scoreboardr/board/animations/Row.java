@@ -29,6 +29,10 @@ public class Row {
     public String getLine() {
         return this.line.string();
     }
+    @Override
+    public String toString() {
+        return getLine();
+    }
 
     public void update() {
         if (is_static) {

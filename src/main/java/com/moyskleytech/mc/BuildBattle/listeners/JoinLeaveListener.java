@@ -4,14 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
 import com.moyskleytech.mc.BuildBattle.game.ArenaState;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.game.RunningArena;
 import com.moyskleytech.mc.BuildBattle.service.Service;
+import com.moyskleytech.mc.BuildBattle.ui.UI;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
 
 import io.papermc.paper.event.entity.EntityDamageItemEvent;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -118,15 +122,13 @@ public class JoinLeaveListener extends Service implements Listener {
         Player player = (Player) event.getInitiator().getViewers().get(0);
         RunningArena arena = a.getArenaForPlayer(player);
         if (arena != null) {
-            if (arena.isPreventBuildDestroy())
-            {
+            if (arena.isPreventBuildDestroy()) {
                 Logger.trace("InventoryMoveItemEvent");
                 event.setCancelled(true);
             }
         }
     }
 
-    
     @EventHandler
     public void PlayerInteractAtEntityEvent(PlayerInteractAtEntityEvent event) {
         Arenas a = Service.get(Arenas.class);
@@ -155,8 +157,30 @@ public class JoinLeaveListener extends Service implements Listener {
                 int slot = p.getInventory().getHeldItemSlot();
                 if (slot <= 6) {
                     arena.getCurrent_plot().vote.put(p.getUniqueId(), slot - 1);
+                    p.sendMessage(LanguageConfig.getInstance().voted().with(p).component());
+
+                    try {
+                        Sound musicDisc = Sound.sound(Key.key("entity.cat.hiss"), Sound.Source.MUSIC, 1f, 1f);
+                        p.playSound(musicDisc);
+                    } catch (Throwable t) {
+
+                    }
+
                     event.setCancelled(true);
                 }
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getClickedInventory() != null && event.getInventory().getHolder() != null
+                && event.getInventory().getHolder() instanceof UI) {
+
+            event.setCancelled(true);
+            if (event.getClickedInventory() == event.getInventory()) {
+                UI gui = (UI) event.getInventory().getHolder();
+                gui.click(event);
             }
         }
     }

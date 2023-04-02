@@ -58,6 +58,7 @@ public class RunningArena implements Listener {
     private String theme;
     private Plot current_plot;
     CompletableFuture<Void> currentAction = null;
+    private boolean stopping;
 
     public String getName() {
         return arena.getName();
@@ -114,8 +115,9 @@ public class RunningArena implements Listener {
     }
 
     public void stop() {
+        stopping = true;
         BuildBattle.getInstance().unregisterListener(this);
-        players.forEach(this::leave);
+        new ArrayList<>(players).forEach(this::leave);
         Arenas arenas = Service.get(Arenas.class);
         arenas.removeRunning(this);
 
@@ -191,7 +193,8 @@ public class RunningArena implements Listener {
             }
         }
         if (players.size() == 0) {
-            stop();
+            if (!stopping)
+                stop();
         }
         Arenas arenas = Service.get(Arenas.class);
         arenas.put(p, null);
@@ -376,6 +379,7 @@ public class RunningArena implements Listener {
         if (state == ArenaState.LOBBY) {
             if (players.size() >= arena.getMinimumPlayers()) {
                 // check for amount of player above minimum to start the vote GUI
+                players.forEach(player -> player.getInventory().clear());
                 players.forEach(player -> player.openInventory(votingUIs.get(player.getUniqueId()).getInventory()));
                 // Once enough players have joined reduce the countdown
                 countdown--;
@@ -395,6 +399,7 @@ public class RunningArena implements Listener {
             if (countdown == 0) {
                 voteIndex++;
                 if (voteIndex >= plots.size()) {
+                    setWinner();
                     setState(ArenaState.SHOWING_WINNER);
                 } else {
                     showBuildForVote();
@@ -409,6 +414,16 @@ public class RunningArena implements Listener {
         }
     }
 
+    private void setWinner() {
+        Plot max = null;
+        for (Plot p : plots.values()) {
+            if (max == null || max.getScore() < p.getScore())
+                max = p;
+        }
+        if (max != null)
+            winner = max.owner;
+    }
+
     public void createScoreboard(Player player) {
         final var scoreboardOptional = ScoreboardManager.getInstance()
                 .fromCache(player.getUniqueId());
@@ -420,7 +435,6 @@ public class RunningArena implements Listener {
 
         Scoreboard.builder()
                 .player(player)
-                .displayObjective("bwa-game")
                 .updateInterval(10L)
                 .animationInterval(2L)
                 .animatedTitle(title)

@@ -123,34 +123,36 @@ public class Scoreboard {
         }
     }
 
-    public LanguagePlaceholder makeUnique(LanguagePlaceholder toUnique, final List<LanguagePlaceholder> from) {
-        if (toUnique == null) {
-            toUnique = LanguagePlaceholder.of(" ");
-        }
-        LanguagePlaceholder toUniqueTmp = toUnique;
-        boolean contains = from.stream().anyMatch(lp -> lp.string().equals(toUniqueTmp.string()));
-        ;
-        while (contains
-                || (this.occupyMaxWidth && !contains && toUnique.string().length() < 40)) {
-            toUnique = toUnique.append(" ");
-            LanguagePlaceholder toUniqueTmp2 = toUnique;
-            contains = from.stream().anyMatch(lp -> lp.string().equals(toUniqueTmp2.string()));
-        }
-        // if (stringBuilder.length() > 40) {
-        // return stringBuilder.substring(0, 40);
-        // }
-        return toUnique;
-    }
+    // public LanguagePlaceholder makeUnique(LanguagePlaceholder toUnique, final List<LanguagePlaceholder> from) {
+    //     if (toUnique == null) {
+    //         toUnique = LanguagePlaceholder.of(" ");
+    //     }
+    //     LanguagePlaceholder toUniqueTmp = toUnique;
+    //     boolean contains = from.stream().anyMatch(lp -> lp.string().equals(toUniqueTmp.string()));
+    //     ;
+    //     while (contains
+    //             || (this.occupyMaxWidth && !contains && toUnique.string().length() < 40)) {
+    //         toUnique = toUnique.append(" ");
+    //         LanguagePlaceholder toUniqueTmp2 = toUnique;
+    //         contains = from.stream().anyMatch(lp -> lp.string().equals(toUniqueTmp2.string()));
+    //     }
+    //     // if (stringBuilder.length() > 40) {
+    //     // return stringBuilder.substring(0, 40);
+    //     // }
+    //     return toUnique;
+    // }
 
     public List<LanguagePlaceholder> resizeContent(final List<LanguagePlaceholder> lines) {
         final ArrayList<LanguagePlaceholder> newList = new ArrayList<LanguagePlaceholder>();
-        lines.forEach(line -> newList.add(this.makeUnique(line, newList)));
+        //lines.forEach(line -> newList.add(this.makeUnique(line, newList)));
+        lines.forEach(line -> newList.add(line));
         if (newList.size() > 15) {
             return newList.subList(0, 15);
         }
         if (this.occupyMaxHeight) {
             while (newList.size() < 16) {
-                newList.add(this.makeUnique(LanguagePlaceholder.of(" "), newList));
+                //newList.add(this.makeUnique(LanguagePlaceholder.of(" "), newList));
+                newList.add(LanguagePlaceholder.of(" "));
             }
         }
         return newList;

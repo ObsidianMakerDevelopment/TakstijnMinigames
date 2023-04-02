@@ -25,10 +25,8 @@ public class ScoreboardBuilder
     private long interval;
     private long animationInterval;
     private LanguagePlaceholder title;
-    private String objectiveName ="";
     private List<LanguagePlaceholder> lines;
     private List<LanguagePlaceholder> animatedTitle;
-    private PlaceholderFunction papiFunction;
     private UpdateCallback updateCallback;
     
     public ScoreboardBuilder updateCallback(final UpdateCallback callback) {
@@ -40,12 +38,7 @@ public class ScoreboardBuilder
         this.placeholders.put(placeholder, value.toString());
         return this;
     }
-    
-    public ScoreboardBuilder placeholderHook(final PlaceholderFunction papiFunction) {
-        this.papiFunction = papiFunction;
-        return this;
-    }
-    
+        
     public ScoreboardBuilder player(final Player player) {
         this.holder = player;
         return this;
@@ -73,11 +66,6 @@ public class ScoreboardBuilder
     
     public ScoreboardBuilder occupyMaxWidth(final boolean bool) {
         this.occupyWidth = bool;
-        return this;
-    }
-    
-    public ScoreboardBuilder displayObjective(final String objectiveName) {
-        this.objectiveName = objectiveName;
         return this;
     }
     
@@ -112,7 +100,6 @@ public class ScoreboardBuilder
         final Map<String, String> placeholders = this.placeholders;
         final Scoreboard scoreboard = this.scoreboard;
         Objects.requireNonNull(scoreboard);
-        scoreboard.setObjective(objectiveName);
         placeholders.forEach(scoreboard::addInternalPlaceholder);
         return this.scoreboard;
     }

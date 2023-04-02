@@ -112,11 +112,12 @@ public class BuildBattle extends JavaPlugin {
 
     public World createEmptyWorld(World.Environment environment, String name) {
         long begin = System.nanoTime();
-        WorldCreator worldCreator = new WorldCreator(name)
+        WorldCreator worldCreator = new WorldCreator("bb_worlds/"+name)
                 .generator(chunkGenerator)
                 .keepSpawnLoaded(TriState.FALSE)
                 .environment(environment);
         World w = Bukkit.createWorld(worldCreator);
+        
         w.setDifficulty(Difficulty.NORMAL);
         w.setSpawnFlags(true,true);
         w.setPVP(false);
@@ -157,7 +158,7 @@ public class BuildBattle extends JavaPlugin {
         worlds.forEach(world -> {
             File toDelete = world.getWorldFolder();
             Bukkit.unloadWorld(world, false);
-            deleteWorld(toDelete);
+            deleteDirectory(toDelete);
         });
         worlds.clear();
     }
@@ -178,7 +179,7 @@ public class BuildBattle extends JavaPlugin {
                 @Override
                 public void run() {
                     try {
-                        deleteWorld(toDelete);
+                        deleteDirectory(toDelete);
                         worlds.remove(world);
                         this.cancel();
                     } catch (Throwable t) {
@@ -192,13 +193,13 @@ public class BuildBattle extends JavaPlugin {
         }
     }
 
-    public boolean deleteWorld(File path) {
+    public boolean deleteDirectory(File path) {
         try {
             if (path.exists()) {
                 File files[] = path.listFiles();
                 for (int i = 0; i < files.length; i++) {
                     if (files[i].isDirectory()) {
-                        deleteWorld(files[i]);
+                        deleteDirectory(files[i]);
                     } else {
                         files[i].delete();
                     }

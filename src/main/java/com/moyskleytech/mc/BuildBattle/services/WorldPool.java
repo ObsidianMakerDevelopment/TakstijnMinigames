@@ -3,6 +3,7 @@ package com.moyskleytech.mc.BuildBattle.services;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,8 @@ public class WorldPool extends Service {
     public void onLoad() throws ServiceLoadException {
         super.onLoad();
         if (free_worlds.size() == 0)
+            BuildBattle.getInstance().deleteDirectory(new File("bb_worlds"));
+
             new BukkitRunnable() {
                 @Override
                 public void run() {

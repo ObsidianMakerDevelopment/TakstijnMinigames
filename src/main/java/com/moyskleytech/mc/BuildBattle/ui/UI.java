@@ -85,8 +85,7 @@ public abstract class UI implements InventoryHolder {
     }
 
     public void click(InventoryClickEvent event) {
-        Logger.trace("Clicked on slot {}", event.getSlot());
-
+        event.setCancelled(true);
         updateUI(true);
     }
 
