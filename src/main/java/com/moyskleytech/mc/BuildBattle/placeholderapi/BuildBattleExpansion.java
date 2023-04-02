@@ -1,10 +1,6 @@
 package com.moyskleytech.mc.BuildBattle.placeholderapi;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
-import com.moyskleytech.mc.BuildBattle.game.Arenas;
-import com.moyskleytech.mc.BuildBattle.game.RunningArena;
-import com.moyskleytech.mc.BuildBattle.service.Service;
-import com.moyskleytech.mc.BuildBattle.utils.Logger;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
