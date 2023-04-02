@@ -47,7 +47,7 @@ public class VotingUI extends UI {
             List<Component> lore = LanguageConfig
                     .getInstance().ui().votingLore().stream().map(lore_line -> (Component) lore_line.with(getPlayer())
                             .replace("%theme%", theme).replace("%votes%",
-                                    String.format("%.1f", votePercentage))
+                                    String.format("%.1f", votePercentage*100))
                             .component())
                     .toList();
             ItemStack votingItem = withTitleAndLore(Material.SPRUCE_SIGN, item_name, lore, 1);

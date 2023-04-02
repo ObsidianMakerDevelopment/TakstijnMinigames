@@ -212,7 +212,7 @@ public class RunningArena implements Listener {
         }
 
         ScoreboardManager.getInstance().fromCache(p.getUniqueId()).ifPresent(scoreboard -> scoreboard.destroy());
-
+        p.getInventory().clear();
         p.teleport(ObsidianUtil.getMainLobby());
     }
 

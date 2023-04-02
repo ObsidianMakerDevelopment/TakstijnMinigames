@@ -140,6 +140,14 @@ public class JoinLeaveListener extends Service implements Listener {
                 int slot = p.getInventory().getHeldItemSlot();
                 if (slot <= 6) {
                     arena.getCurrent_plot().vote.put(p.getUniqueId(), slot - 1);
+                    p.sendMessage(LanguageConfig.getInstance().voted().with(p).component());
+
+                    try {
+                        Sound musicDisc = Sound.sound(Key.key("entity.cat.hiss"), Sound.Source.MUSIC, 1f, 1f);
+                        p.playSound(musicDisc);
+                    } catch (Throwable t) {
+
+                    }
                     event.setCancelled(true);
                 }
             }
