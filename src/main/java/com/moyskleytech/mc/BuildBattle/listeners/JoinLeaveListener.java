@@ -9,6 +9,7 @@ import com.moyskleytech.mc.BuildBattle.game.ArenaState;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.game.RunningArena;
 import com.moyskleytech.mc.BuildBattle.service.Service;
+import com.moyskleytech.mc.BuildBattle.utils.Logger;
 
 import io.papermc.paper.event.entity.EntityDamageItemEvent;
 
@@ -118,7 +119,10 @@ public class JoinLeaveListener extends Service implements Listener {
         RunningArena arena = a.getArenaForPlayer(player);
         if (arena != null) {
             if (arena.isPreventBuildDestroy())
+            {
+                Logger.trace("InventoryMoveItemEvent");
                 event.setCancelled(true);
+            }
         }
     }
 

@@ -31,6 +31,7 @@ import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.Paster;
 import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 import com.moyskleytech.mc.BuildBattle.ui.VotingUI;
+import com.moyskleytech.mc.BuildBattle.utils.Logger;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 
 import lombok.Getter;
@@ -56,6 +57,7 @@ public class RunningArena implements Listener {
     private Iterator<Plot> plotsToVote;
     private String theme;
     private Plot current_plot;
+    CompletableFuture<Void> currentAction = null;
 
     public String getName() {
         return arena.getName();
@@ -80,14 +82,35 @@ public class RunningArena implements Listener {
     }
 
     public CompletableFuture<Void> pasteLobby() {
+        if (currentAction != null) {
+            return currentAction.thenAccept(Void -> {
+                currentAction = pasteLobby();
+            });
+        }
         blockMovement = true;
         CompletableFuture<Void> pasting = Service.get(Paster.class).paste(arena.lobbyCenter.toBukkit(),
                 world.getSpawnLocation(),
                 arena.lobbySize, arena.lobbySize, arena.lobbyHeight);
 
-        pasting = pasting.thenAccept(e -> blockMovement = false);
+        pasting = pasting.thenAccept(e -> {
+            blockMovement = false;
+        });
 
-        return pasting;
+        return currentAction = pasting;
+    }
+
+    public CompletableFuture<Void> unpasteLobby() {
+        if (currentAction != null) {
+            return currentAction.thenAccept(Void -> {
+                currentAction = unpasteLobby();
+            });
+        }
+        blockMovement = true;
+        CompletableFuture<Void> pasting = Service.get(Paster.class).unpaste(
+                world.getSpawnLocation(),
+                arena.lobbySize, arena.lobbySize, arena.lobbyHeight);
+
+        return currentAction = pasting;
     }
 
     public void stop() {
@@ -95,7 +118,35 @@ public class RunningArena implements Listener {
         players.forEach(this::leave);
         Arenas arenas = Service.get(Arenas.class);
         arenas.removeRunning(this);
-        WorldPool.getInstance().freeWorld(this.world);
+
+        Logger.trace("Unpasting arena's lobby");
+        unpasteLobby().thenAccept(Void -> {
+            currentAction = runLaterOrNow().thenAccept(Void3 -> {
+                var plotUnpaste = plots.values().stream().map(plot -> {
+                    Logger.trace("Unpasting arena's plot");
+
+                    CompletableFuture<Void> unpastePlot = Service.get(Paster.class).unpaste(plot.center,
+                            arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
+                            arena.plotHeight + arena.contourSize);
+                    return unpastePlot;
+                }).toList();
+
+                currentAction = runLaterOrNow().thenAccept(Void4 -> {
+                    ObsidianUtil.future(plotUnpaste).thenAccept(Void2 -> {
+                        Logger.trace("Unregistering world from used");
+
+                        WorldPool.getInstance().freeWorld(this.world);
+                    });
+                });
+            });
+        });
+    }
+
+    private CompletableFuture<Void> runLaterOrNow() {
+        if (currentAction == null)
+            return CompletableFuture.completedFuture(null);
+        else
+            return currentAction;
     }
 
     public CompletableFuture<Boolean> join(Player p) {
@@ -111,14 +162,18 @@ public class RunningArena implements Listener {
                 p.setFlying(true);
                 createScoreboard(p);
 
-                VotingUI vi = new VotingUI(p, themes, voting);
-                votingUIs.values().forEach(ovi -> {
-                    vi.attach(ovi);
-                    ovi.attach(vi);
-                });
-                votingUIs.put(p.getUniqueId(), vi);
+                try {
+                    VotingUI vi = new VotingUI(p, themes, voting);
+                    votingUIs.values().forEach(ovi -> {
+                        vi.attach(ovi);
+                        ovi.attach(vi);
+                    });
+                    votingUIs.put(p.getUniqueId(), vi);
 
-                p.openInventory(vi.getInventory());
+                    p.openInventory(vi.getInventory());
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
 
                 return teleport;
             });
@@ -203,22 +258,25 @@ public class RunningArena implements Listener {
                             player.setFlying(true);
                             return player.teleportAsync(plots.get(player.getUniqueId()).center);
                         }).toList();
+                currentAction = runLaterOrNow()
+                        .thenAccept(
+                                Void3 -> currentAction = ObsidianUtil.future(teleports).thenAccept(ignored_teleport -> {
+                                    Paster paster = Service.get(Paster.class);
+                                    currentAction = runLaterOrNow().thenAccept(Void4 -> {
+                                        var plotPasting = plots.values().stream().map(plot -> {
+                                            return paster.paste(arena.plotSchematicCenter.toBukkit(), plot.center,
+                                                    arena.plotSize + arena.contourSize,
+                                                    arena.plotSize + arena.contourSize,
+                                                    arena.plotHeight);
+                                        }).toList();
+                                        CompletableFuture<Void> pasterAll = ObsidianUtil
+                                                .future(plotPasting);
 
-                CompletableFuture.allOf(
-                        (CompletableFuture<Boolean>[]) teleports.toArray()).thenAccept(ignored_teleport -> {
-                            Paster paster = Service.get(Paster.class);
-                            Object[] plotPasting = plots.values().stream().map(plot -> {
-                                return paster.paste(arena.plotSchematicCenter.toBukkit(), plot.center,
-                                        arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
-                                        arena.plotHeight);
-                            }).toArray();
-                            CompletableFuture<Void> pasterAll = CompletableFuture
-                                    .allOf((CompletableFuture<Void>[]) plotPasting);
-
-                            pasterAll.thenAccept(ignored_ -> {
-                                setState(ArenaState.BUILDING);
-                            });
-                        });
+                                        currentAction = pasterAll.thenAccept(ignored_ -> {
+                                            setState(ArenaState.BUILDING);
+                                        });
+                                    });
+                                }));
             });
         }
         if (state == ArenaState.BUILDING) {
@@ -288,15 +346,16 @@ public class RunningArena implements Listener {
                     });
             Paster paster = Service.get(Paster.class);
             // Unpaste all plots
-            Object[] plotPasting = plots.values().stream().map(plot -> {
-                return paster.unpaste(plot.center,
-                        arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
-                        arena.plotHeight);
-            }).toArray();
-            CompletableFuture<Void> unpasterAll = CompletableFuture
-                    .allOf((CompletableFuture<Void>[]) plotPasting);
+            currentAction = runLaterOrNow().thenAccept(Void3 -> {
+                var plotPasting = plots.values().stream().map(plot -> {
+                    return paster.unpaste(plot.center,
+                            arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
+                            arena.plotHeight);
+                }).toList();
+                CompletableFuture<Void> unpasterAll = ObsidianUtil.future(plotPasting);
 
-            unpasterAll.thenAccept(e -> stop());
+                currentAction = unpasterAll.thenAccept(e -> stop());
+            });
         }
     }
 
@@ -305,18 +364,19 @@ public class RunningArena implements Listener {
         // Teleport players to plots, 1 by one
         players.forEach(player -> {
             player.teleport(current_plot.center);
-            // TODO: Put voting items in player hotbars
+            // Put voting items in player hotbars
             player.getInventory().clear();
-            for(int i=0;i<6;i++)
-                player.getInventory().setItem(i,  ObsidianConfig.getInstance().getVoteItem(i).forPlayer(player).build());
+            for (int i = 0; i < 6; i++)
+                player.getInventory().setItem(i, ObsidianConfig.getInstance().getVoteItem(i).forPlayer(player).build());
         });
 
     }
 
     public void tick() {
         if (state == ArenaState.LOBBY) {
-            if (players.size() > arena.getMinimumPlayers()) {
-                // TODO: check for amount of player above minimum to start the vote GUI
+            if (players.size() >= arena.getMinimumPlayers()) {
+                // check for amount of player above minimum to start the vote GUI
+                players.forEach(player -> player.openInventory(votingUIs.get(player.getUniqueId()).getInventory()));
                 // Once enough players have joined reduce the countdown
                 countdown--;
                 if (countdown == 0) {

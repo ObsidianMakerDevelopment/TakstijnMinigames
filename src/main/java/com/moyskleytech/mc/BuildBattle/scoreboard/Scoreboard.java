@@ -43,7 +43,6 @@ public class Scoreboard {
     private boolean updateTaskRunning;
     private Player player;
     private List<LanguagePlaceholder> lines;
-    private PlaceholderFunction papiFunction;
     private final HashMap<String, Object> persistentPlaceholders;
 
     public Scoreboard(final Player player) {
@@ -162,14 +161,12 @@ public class Scoreboard {
 
         this.cancelTasks();
         ScoreboardManager.getInstance().removeFromCache(this.player.getUniqueId());
+
+        this.player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
     }
 
     public void setObjective(String objectiveName) {
         holder.setObjective(objectiveName);
-    }
-
-    public void setPlaceholderHook(final PlaceholderFunction papiFunction) {
-        this.papiFunction = (papiFunction);
     }
 
     public void addInternalPlaceholder(final String placeholder, final Object value) {

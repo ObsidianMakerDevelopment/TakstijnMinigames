@@ -240,9 +240,9 @@ public class LanguageConfig extends Service {
     }
     public class UiConfig {
         public static ConfigSection build(ConfigSection section) throws SerializationException {
-            return section.section("error")
+            return section.section("ui")
             .key("voting_title").defValue("%prefix%Voting for map")
-            .key("vote_item_name").defValue("<RAINBOW1>%theme%</RAINBOW>")
+            .key("vote_item_name").defValue("%theme%")
             .key("vote_lore").defValue(List.of(
                 "Vote for theme &b%theme%",
                 "",

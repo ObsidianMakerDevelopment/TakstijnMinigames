@@ -103,9 +103,6 @@ public class ScoreboardBuilder
         if (this.lines != null) {
             this.scoreboard.setLines(this.lines);
         }
-        if (this.papiFunction != null) {
-            this.scoreboard.setPlaceholderHook(this.papiFunction);
-        }
         if (this.animatedTitle != null) {
             this.scoreboard.setAnimatedTitle(this.animatedTitle);
         }

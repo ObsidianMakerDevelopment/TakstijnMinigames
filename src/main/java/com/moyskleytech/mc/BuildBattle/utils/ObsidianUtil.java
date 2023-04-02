@@ -23,6 +23,8 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class ObsidianUtil {
@@ -254,5 +256,23 @@ public class ObsidianUtil {
         // TODO: Teleport leave player to main lobby, maybe lobby from config, otherwise world 0
 
         return Bukkit.getWorlds().get(0).getSpawnLocation();
+    }
+
+    public static <T> CompletableFuture<Void> future(Collection<CompletableFuture<T>> teleports) {
+        if(teleports.size()==0)
+            return CompletableFuture.completedFuture(null);
+        else
+        {
+            CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+            int size = teleports.size();
+            AtomicInteger toComplete = new AtomicInteger(size);
+            teleports.forEach(
+                teleport-> teleport.thenAccept(teleportValue->{
+                    if(toComplete.decrementAndGet()==0)
+                    completableFuture.complete(null);
+                })
+            );
+            return completableFuture;
+        }
     }
 }

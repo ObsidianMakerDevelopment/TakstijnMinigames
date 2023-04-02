@@ -1,17 +1,8 @@
 package com.moyskleytech.mc.BuildBattle.services;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
-import com.moyskleytech.mc.BuildBattle.config.VotingItems;
 import com.moyskleytech.mc.BuildBattle.service.Service;
-import com.moyskleytech.obsidian.material.ObsidianMaterialKeyDeserializer;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,13 +29,13 @@ public class WorldPool extends Service {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    for (int i = 0; i < 1; i++) {
+                    for (int i = 0; i < 2; i++) {
                         freeWorld(getWorld(Environment.NORMAL));
                         freeWorld(getWorld(Environment.NETHER));
                         freeWorld(getWorld(Environment.THE_END));
                     }
                 }
-            }.runTaskLaterAsynchronously(BuildBattle.getInstance(), 20);
+            }.runTaskLater(BuildBattle.getInstance(), 20);
     }
 
     public World getWorld(Environment type) {

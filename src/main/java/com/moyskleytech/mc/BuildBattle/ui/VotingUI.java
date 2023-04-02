@@ -3,25 +3,16 @@ package com.moyskleytech.mc.BuildBattle.ui;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
-import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
-import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 
 import net.kyori.adventure.text.Component;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 
 public class VotingUI extends UI {
     private List<VotingUI> attachedUIs = new ArrayList<>();
@@ -93,12 +84,16 @@ public class VotingUI extends UI {
 
     @Override
     public int getSize() {
+        Logger.trace("VotingUI::getSize {}", themes.size());
         return 9 * themes.size();
     }
 
     @Override
     public Component getTitle() {
-        return LanguageConfig.getInstance().ui().votingTitle().with(getPlayer()).component();
+        Component title = LanguageConfig.getInstance().ui().votingTitle().with(getPlayer()).component();
+        Logger.trace("VotingUI::getTitle {}", title);
+
+        return title;
     }
 
 }
