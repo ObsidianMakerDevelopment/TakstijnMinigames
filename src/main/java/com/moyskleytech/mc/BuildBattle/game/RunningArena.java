@@ -74,7 +74,7 @@ public class RunningArena implements Listener {
         Collections.shuffle(tmpList);
         for (int i = 0; i < 5; i++) {
             if (i < tmpList.size()) {
-                themes.add(tmpList.get(0));
+                themes.add(tmpList.get(i));
                 voting.add(new AtomicInteger());
             }
         }
