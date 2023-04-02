@@ -51,7 +51,7 @@ public class VotingUI extends UI {
             ItemStack votingItem = withTitleAndLore(Material.SPRUCE_SIGN, item_name, lore, 1);
             inventory.setItem(i * 9, votingItem);
 
-            ItemStack bar = withTitleAndLore(Material.IRON_BARS, Component.empty(), lore);
+            ItemStack bar = withTitleAndLore(Material.IRON_BARS, Component.empty(), lore,1);
 
             inventory.setItem(i * 9 + 1, bar);
 
@@ -59,7 +59,7 @@ public class VotingUI extends UI {
             for (int idx = 0; idx < 7; idx++) {
                 ItemStack pane = withTitleAndLore(
                         idx < number_green ? Material.GREEN_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
-                        item_name, lore);
+                        item_name, lore,1);
                 inventory.setItem(i * 9 + 2 + idx, pane);
             }
         }
@@ -74,6 +74,7 @@ public class VotingUI extends UI {
     }
 
     public void click(InventoryClickEvent event) {
+        event.setCancelled(true);
         if (currentVote != null)
             voteCounts.get(currentVote.intValue()).decrementAndGet();
         int row = event.getSlot() / 9;

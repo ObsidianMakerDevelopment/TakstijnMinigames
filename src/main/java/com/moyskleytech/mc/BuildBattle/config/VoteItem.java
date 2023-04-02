@@ -32,9 +32,9 @@ public class VoteItem {
         public ItemStack build() {
             ItemStack item = template.build();
             List<Component> oldLore = item.lore();
-            item.lore(oldLore.stream().map(lore->LanguagePlaceholder.of(lore).with(p).component()).toList());
+            if(oldLore!=null)
+                item.lore(oldLore.stream().map(lore->LanguagePlaceholder.of(lore).with(p).component()).toList());
             return item;
-            
         }
     }
 }
