@@ -19,6 +19,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
@@ -28,6 +30,7 @@ import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder
 import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
 import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
 import com.moyskleytech.mc.BuildBattle.service.Service;
+import com.moyskleytech.mc.BuildBattle.services.Data;
 import com.moyskleytech.mc.BuildBattle.services.Paster;
 import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 import com.moyskleytech.mc.BuildBattle.ui.VotingUI;
@@ -48,6 +51,7 @@ public class RunningArena implements Listener {
     Map<UUID, VotingUI> votingUIs = new HashMap<>();
     List<AtomicInteger> voting = new ArrayList<>();
     List<String> themes = new ArrayList<>();
+    Map<UUID, ItemStack[]> playersInventory = new HashMap<>();
 
     boolean blockMovement = false;
     boolean preventBuildDestroy = false;
@@ -154,6 +158,8 @@ public class RunningArena implements Listener {
     public CompletableFuture<Boolean> join(Player p) {
         if (state == ArenaState.LOBBY) {
             players.add(p);
+            this.playersInventory.put(p.getUniqueId(), p.getInventory().getContents());
+            p.getInventory().clear();
             Arenas arenas = Service.get(Arenas.class);
             arenas.put(p, this);
 
@@ -166,11 +172,11 @@ public class RunningArena implements Listener {
 
                 try {
                     VotingUI vi = new VotingUI(p, themes, voting);
+                    votingUIs.put(p.getUniqueId(), vi);
                     votingUIs.values().forEach(ovi -> {
                         vi.attach(ovi);
                         ovi.attach(vi);
                     });
-                    votingUIs.put(p.getUniqueId(), vi);
 
                     p.openInventory(vi.getInventory());
                 } catch (Throwable t) {
@@ -213,6 +219,8 @@ public class RunningArena implements Listener {
 
         ScoreboardManager.getInstance().fromCache(p.getUniqueId()).ifPresent(scoreboard -> scoreboard.destroy());
         p.getInventory().clear();
+        p.getInventory().setContents(this.playersInventory.get(p.getUniqueId()));
+        // this.playersInventory.put(p.getUniqueId(), p.getInventory().getContents());
         p.teleport(ObsidianUtil.getMainLobby());
     }
 
@@ -244,7 +252,7 @@ public class RunningArena implements Listener {
                         player -> {
                             // Create plot
                             int plot = plotIds.incrementAndGet();
-                            Location center = world.getSpawnLocation().add(plot * (arena.plotSize + arena.contourSize),
+                            Location center = world.getSpawnLocation().add(plot * 2*(arena.plotSize + arena.contourSize+1),
                                     0, 0);
                             Plot playerPlot = new Plot();
                             playerPlot.center = center;
@@ -270,7 +278,7 @@ public class RunningArena implements Listener {
                                             return paster.paste(arena.plotSchematicCenter.toBukkit(), plot.center,
                                                     arena.plotSize + arena.contourSize,
                                                     arena.plotSize + arena.contourSize,
-                                                    arena.plotHeight);
+                                                    arena.plotHeight+ arena.contourSize);
                                         }).toList();
                                         CompletableFuture<Void> pasterAll = ObsidianUtil
                                                 .future(plotPasting);
@@ -353,7 +361,7 @@ public class RunningArena implements Listener {
                 var plotPasting = plots.values().stream().map(plot -> {
                     return paster.unpaste(plot.center,
                             arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
-                            arena.plotHeight);
+                            arena.plotHeight+ arena.contourSize);
                 }).toList();
                 CompletableFuture<Void> unpasterAll = ObsidianUtil.future(plotPasting);
 
@@ -375,40 +383,48 @@ public class RunningArena implements Listener {
 
     }
 
+    public void openVoteInventory(Player player) {
+        player.openInventory(votingUIs.get(player.getUniqueId()).getInventory());
+    }
+
     public void tick() {
         if (state == ArenaState.LOBBY) {
+            players.forEach(player -> player.getInventory().setItem(4,
+                    Data.getInstance().getItems().voteItems.get(6).forPlayer(player).build()));
             if (players.size() >= arena.getMinimumPlayers()) {
                 // check for amount of player above minimum to start the vote GUI
-                players.forEach(player -> player.getInventory().clear());
-                players.forEach(player -> player.openInventory(votingUIs.get(player.getUniqueId()).getInventory()));
+                // players.forEach(player -> player.getInventory().clear());
+                // players.forEach(player ->
+                // player.openInventory(votingUIs.get(player.getUniqueId()).getInventory()));
                 // Once enough players have joined reduce the countdown
                 countdown--;
-                if (countdown == 0) {
+                if (countdown <= 0) {
                     setState(ArenaState.STARTING);
                 }
             }
         }
         if (state == ArenaState.BUILDING) {
             countdown--;
-            if (countdown == 0) {
+            if (countdown <= 0) {
                 setState(ArenaState.SHOWING_BUILDS);
             }
         }
         if (state == ArenaState.SHOWING_BUILDS) {
             countdown--;
-            if (countdown == 0) {
+            if (countdown <= 0) {
                 voteIndex++;
                 if (voteIndex >= plots.size()) {
                     setWinner();
                     setState(ArenaState.SHOWING_WINNER);
                 } else {
+                    countdown = arena.getVoteDuration();
                     showBuildForVote();
                 }
             }
         }
         if (state == ArenaState.SHOWING_WINNER) {
             countdown--;
-            if (countdown == 0) {
+            if (countdown <= 0) {
                 setState(ArenaState.ENDING);
             }
         }

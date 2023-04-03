@@ -34,20 +34,26 @@ public abstract class UI implements InventoryHolder {
     }
 
     public void attach(UI second) {
-        attachedUIs.add(second);
+        if (second != this)
+            attachedUIs.add(second);
+    }
+
+    public void detach(UI second) {
+        attachedUIs.remove(second);
     }
 
     @Override
     public Inventory getInventory() {
-        Logger.trace("getInventory::createInventory({},{})->{}",getSize(), getTitle(), inventory);
+        Logger.trace("getInventory::createInventory({},{})->{}", getSize(), getTitle(), inventory);
         inventory = Bukkit.createInventory(this, getSize(), getTitle());
-        Logger.trace("getInventory::createInventory({},{})->{}",getSize(), getTitle(), inventory);
+        Logger.trace("getInventory::createInventory({},{})->{}", getSize(), getTitle(), inventory);
         updateUI(true);
 
         return inventory;
     }
 
     public abstract int getSize();
+
     public abstract Component getTitle();
 
     public void updateUI(boolean propagate) {

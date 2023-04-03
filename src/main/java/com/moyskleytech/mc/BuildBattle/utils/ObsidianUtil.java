@@ -3,6 +3,8 @@ package com.moyskleytech.mc.BuildBattle.utils;
 import com.google.common.io.ByteStreams;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
+import com.moyskleytech.mc.BuildBattle.game.LocationDB;
+import com.moyskleytech.mc.BuildBattle.services.Data;
 import com.moyskleytech.obsidian.material.ObsidianMaterial;
 
 import net.kyori.adventure.key.Key;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -133,9 +136,7 @@ public class ObsidianUtil {
         return Optional.ofNullable(Bukkit.getPlayer(uuid));
     }
 
-    
-
-    public static void reloadPlugin( JavaPlugin plugin) {
+    public static void reloadPlugin(JavaPlugin plugin) {
         // PlayerWrapperService.getInstance().reload();
         Bukkit.getServer().getPluginManager().enablePlugin(plugin);
         if (plugin == BuildBattle.getPluginInstance()) {
@@ -145,7 +146,7 @@ public class ObsidianUtil {
         Bukkit.getLogger().info("Plugin reloaded! Keep in mind that restarting the server is safer!");
     }
 
-    public static String capitalizeFirstLetter( String toCap) {
+    public static String capitalizeFirstLetter(String toCap) {
         return toCap.substring(0, 1).toUpperCase() + toCap.substring(1).toLowerCase();
     }
 
@@ -178,7 +179,7 @@ public class ObsidianUtil {
         p.sendPluginMessage(BuildBattle.getInstance(), "BungeeCord", out.toByteArray());
     }
 
-    public static void removeFromInventory(Material m, int amount,  Player player) {
+    public static void removeFromInventory(Material m, int amount, Player player) {
         var inventoryStock = player.getInventory().all(m);
         for (var stack : inventoryStock.entrySet()) {
             var count = stack.getValue().getAmount();
@@ -208,7 +209,7 @@ public class ObsidianUtil {
         return component(text, null);
     }
 
-    public static void playSound( Player player, String string) {
+    public static void playSound(Player player, String string) {
         net.kyori.adventure.sound.Sound pling = net.kyori.adventure.sound.Sound.sound(Key.key(string),
                 net.kyori.adventure.sound.Sound.Source.MASTER, 1f, 1f);
         player.playSound(pling);
@@ -220,12 +221,13 @@ public class ObsidianUtil {
             return "<EMPTY>";
         return s.getAmount() + " " + s.getI18NDisplayName();
     }
+
     @SuppressWarnings("deprecation")
     public static String name(Material s) {
         return new ItemStack(s).getI18NDisplayName();
     }
 
-    public static boolean canEnchantItem(Enchantment enchant,  ItemStack item) {
+    public static boolean canEnchantItem(Enchantment enchant, ItemStack item) {
         if (item.getType() == Material.BOOK)
             return true;
         if (item.getType() == Material.FISHING_ROD && enchant.getKey().toString().equals("minecraft:power"))
@@ -233,7 +235,7 @@ public class ObsidianUtil {
         return enchant.canEnchantItem(item);
     }
 
-    public static  String name(Location target) {
+    public static String name(Location target) {
         return "X:" + target.getX() + ",Y:" + target.getY() + ",Z:" + target.getZ();
     }
 
@@ -252,26 +254,40 @@ public class ObsidianUtil {
         }
     }
 
-    public static @NotNull Location getMainLobby() {
-        // TODO: Teleport leave player to main lobby, maybe lobby from config, otherwise world 0
+    public static File mainLobbyFile() {
+        File folder = BuildBattle.getPluginInstance().getDataFolder();
+        File value = new File(folder, "mainLobby.yml");
+        return value;
+    }
 
+    public static @NotNull Location getMainLobby() {
+        Data data = Data.getInstance();
+        File mainLobby = mainLobbyFile();
+        if (mainLobby.exists())
+            return data.load(LocationDB.class, mainLobby).toBukkit();
         return Bukkit.getWorlds().get(0).getSpawnLocation();
     }
 
-    public static <T> CompletableFuture<Void> future(Collection<CompletableFuture<T>> teleports) {
-        if(teleports.size()==0)
-            return CompletableFuture.completedFuture(null);
+    public static void setMainLobby(Location loc) {
+        Data data = Data.getInstance();
+        if (loc == null)
+            mainLobbyFile().delete();
         else
-        {
+            data.save(LocationDB.fromBukkit(loc), mainLobbyFile());
+    }
+
+    public static <T> CompletableFuture<Void> future(Collection<CompletableFuture<T>> teleports) {
+        if (teleports.size() == 0)
+            return CompletableFuture.completedFuture(null);
+        else {
             CompletableFuture<Void> completableFuture = new CompletableFuture<>();
             int size = teleports.size();
             AtomicInteger toComplete = new AtomicInteger(size);
             teleports.forEach(
-                teleport-> teleport.thenAccept(teleportValue->{
-                    if(toComplete.decrementAndGet()==0)
-                    completableFuture.complete(null);
-                })
-            );
+                    teleport -> teleport.thenAccept(teleportValue -> {
+                        if (toComplete.decrementAndGet() == 0)
+                            completableFuture.complete(null);
+                    }));
             return completableFuture;
         }
     }

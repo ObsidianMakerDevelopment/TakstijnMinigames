@@ -7,6 +7,7 @@ import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.game.LocationDB;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
+import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 import com.moyskleytech.mc.BuildBattle.utils.Logger.Level;
 
 import java.util.Collections;
@@ -61,6 +62,20 @@ public class AdminCommand extends CommandManager.Command {
             player.sendMessage(LanguageConfig.getInstance().editor().nowInEdition(map).component());
         else
             player.sendMessage(LanguageConfig.getInstance().error().nonExistingMap(map).component());
+    }
+
+    @CommandMethod("bb admin setmainlobby")
+    @CommandPermission("obsidian.bb.admin.lobby")
+    private void commandSetMainLobby(final Player player) {
+        ObsidianUtil.setMainLobby(player.getLocation());
+        player.sendMessage(LanguageConfig.getInstance().editor().changed("<Plugin>","Lobby").component());
+    }
+
+    @CommandMethod("bb admin removelobby")
+    @CommandPermission("obsidian.bb.admin.lobby")
+    private void commandRemoveMainLobby(final CommandSender player) {
+        ObsidianUtil.setMainLobby(null);
+        player.sendMessage(LanguageConfig.getInstance().editor().changed("<Plugin>","Lobby").component());
     }
 
     @CommandMethod("bb admin save")

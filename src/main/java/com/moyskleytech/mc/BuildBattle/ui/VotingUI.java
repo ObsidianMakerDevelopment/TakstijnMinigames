@@ -27,16 +27,25 @@ public class VotingUI extends UI {
     }
 
     public void attach(VotingUI second) {
-        attachedUIs.add(second);
+        Logger.trace("VotingUI::attach {} {}", this, second);
+        super.attach(second);
+        if (second != this)
+            attachedUIs.add(second);
     }
 
     public void detach(VotingUI second) {
+        Logger.trace("VotingUI::detach {} {}", this, second);
+        super.detach(second);
         attachedUIs.remove(second);
     }
 
     @Override
     public void updateUI(boolean propagate) {
+        Logger.trace("VotingUI::updateUI {} {}", this, propagate);
+
         super.updateUI(propagate);
+        if (propagate)
+            attachedUIs.forEach(ui -> ui.updateUI(false));
         for (int i = 0; i < themes.size(); i++) {
             String theme = themes.get(i);
             AtomicInteger votes = voteCounts.get(i);
@@ -47,7 +56,7 @@ public class VotingUI extends UI {
             List<Component> lore = LanguageConfig
                     .getInstance().ui().votingLore().stream().map(lore_line -> (Component) lore_line.with(getPlayer())
                             .replace("%theme%", theme).replace("%votes%",
-                                    String.format("%.1f", votePercentage*100))
+                                    String.format("%.1f", votePercentage * 100))
                             .component())
                     .toList();
             ItemStack votingItem = withTitleAndLore(Material.SPRUCE_SIGN, item_name, lore, 1);

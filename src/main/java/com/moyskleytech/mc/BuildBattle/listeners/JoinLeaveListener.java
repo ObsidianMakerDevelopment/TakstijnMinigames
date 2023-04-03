@@ -135,6 +135,14 @@ public class JoinLeaveListener extends Service implements Listener {
         Player player = (Player) event.getPlayer();
         RunningArena arena = a.getArenaForPlayer(player);
         if (arena != null) {
+            if (arena.getState() == ArenaState.LOBBY) {
+                Player p = event.getPlayer();
+                int slot = p.getInventory().getHeldItemSlot();
+                if(slot==4)
+                {
+                    arena.openVoteInventory(player);
+                }
+            }
             if (arena.getState() == ArenaState.SHOWING_BUILDS) {
                 Player p = event.getPlayer();
                 int slot = p.getInventory().getHeldItemSlot();
@@ -160,6 +168,14 @@ public class JoinLeaveListener extends Service implements Listener {
         Player player = (Player) event.getPlayer();
         RunningArena arena = a.getArenaForPlayer(player);
         if (arena != null) {
+            if (arena.getState() == ArenaState.LOBBY) {
+                Player p = event.getPlayer();
+                int slot = p.getInventory().getHeldItemSlot();
+                if(slot==4)
+                {
+                    arena.openVoteInventory(player);
+                }
+            }
             if (arena.getState() == ArenaState.SHOWING_BUILDS) {
                 Player p = event.getPlayer();
                 int slot = p.getInventory().getHeldItemSlot();
@@ -185,6 +201,14 @@ public class JoinLeaveListener extends Service implements Listener {
         Player player = (Player) event.getPlayer();
         RunningArena arena = a.getArenaForPlayer(player);
         if (arena != null) {
+            if (arena.getState() == ArenaState.LOBBY) {
+                Player p = event.getPlayer();
+                int slot = p.getInventory().getHeldItemSlot();
+                if(slot==4)
+                {
+                    arena.openVoteInventory(player);
+                }
+            }
             if (arena.getState() == ArenaState.SHOWING_BUILDS) {
                 Player p = event.getPlayer();
                 int slot = p.getInventory().getHeldItemSlot();

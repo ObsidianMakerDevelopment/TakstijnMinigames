@@ -14,6 +14,7 @@ public class VotingItems {
         new VoteItem(new ObsidianItemTemplate().material(ObsidianMaterial.wrap(Material.ORANGE_TERRACOTTA)).name("Average")),
         new VoteItem(new ObsidianItemTemplate().material(ObsidianMaterial.wrap(Material.YELLOW_TERRACOTTA)).name("Good")),
         new VoteItem(new ObsidianItemTemplate().material(ObsidianMaterial.wrap(Material.BLUE_TERRACOTTA)).name("Excellent")),
-        new VoteItem(new ObsidianItemTemplate().material(ObsidianMaterial.wrap(Material.LIME_TERRACOTTA)).name("Exceptional"))
+        new VoteItem(new ObsidianItemTemplate().material(ObsidianMaterial.wrap(Material.LIME_TERRACOTTA)).name("Exceptional")),
+        new VoteItem(new ObsidianItemTemplate().material(ObsidianMaterial.wrap(Material.PAPER)).name("Vote"))
     );
 }
