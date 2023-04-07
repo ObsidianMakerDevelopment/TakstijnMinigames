@@ -2,6 +2,7 @@ package com.moyskleytech.mc.BuildBattle.game;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +28,7 @@ import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
+import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.WinnerMessageConfig;
 import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
 import com.moyskleytech.mc.BuildBattle.scoreboard.ScoreboardManager;
 import com.moyskleytech.mc.BuildBattle.service.Service;
@@ -182,6 +184,9 @@ public class RunningArena implements Listener {
                 } catch (Throwable t) {
                     t.printStackTrace();
                 }
+                LanguagePlaceholder lp = LanguageConfig.getInstance().forGameState(ArenaState.LOBBY, -1);
+                if (lp != null)
+                    p.sendMessage(lp.with(p).component());
 
                 return teleport;
             });
@@ -252,7 +257,8 @@ public class RunningArena implements Listener {
                         player -> {
                             // Create plot
                             int plot = plotIds.incrementAndGet();
-                            Location center = world.getSpawnLocation().add(plot * 2*(arena.plotSize + arena.contourSize+1),
+                            Location center = world.getSpawnLocation().add(
+                                    plot * 2 * (arena.plotSize + arena.contourSize + 1),
                                     0, 0);
                             Plot playerPlot = new Plot();
                             playerPlot.center = center;
@@ -278,7 +284,7 @@ public class RunningArena implements Listener {
                                             return paster.paste(arena.plotSchematicCenter.toBukkit(), plot.center,
                                                     arena.plotSize + arena.contourSize,
                                                     arena.plotSize + arena.contourSize,
-                                                    arena.plotHeight+ arena.contourSize);
+                                                    arena.plotHeight + arena.contourSize);
                                         }).toList();
                                         CompletableFuture<Void> pasterAll = ObsidianUtil
                                                 .future(plotPasting);
@@ -319,7 +325,35 @@ public class RunningArena implements Listener {
             showBuildForVote();
         }
         if (state == ArenaState.SHOWING_WINNER) {
+            List<Plot> plotsList = new ArrayList<>(plots.values());
+            Collections.sort(plotsList, Comparator.comparing(plot -> -plot.getScore()));
+
             // TODO: Show Score, if present
+            WinnerMessageConfig cfg = LanguageConfig.getInstance().winnerMessage();
+            {
+                for (Player p : players) {
+                    var header = processPlaceholders(cfg.header(), p);
+                    List<LanguagePlaceholder> center = new ArrayList<>();
+                    for (int i = 0; i < cfg.numberPlayerShown(); i++) {
+                        if (i < plotsList.size()) {
+                            Plot aPlot = plotsList.get(i);
+                            center.add(
+                                cfg.row().replace("%name%", aPlot.owner.displayName())
+                                .replace("position", String.valueOf(i+1))
+                                .replace("score", String.valueOf(aPlot.getScore()))
+                            );
+                        }
+                    }
+                    center = processPlaceholders(center, p);
+                    var footer = processPlaceholders(cfg.header(), p);
+                    List<LanguagePlaceholder> wholeMsaage = new ArrayList<>();
+                    wholeMsaage.addAll(header);
+                    wholeMsaage.addAll(center);
+                    wholeMsaage.addAll(footer);
+                    for(var lp:wholeMsaage)
+                        p.sendMessage(lp.component());
+                }
+            }
             // BIG CHAT MESSAGE WITH EVERYONE SCORE
 
             preventBuildDestroy = true;
@@ -361,12 +395,17 @@ public class RunningArena implements Listener {
                 var plotPasting = plots.values().stream().map(plot -> {
                     return paster.unpaste(plot.center,
                             arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
-                            arena.plotHeight+ arena.contourSize);
+                            arena.plotHeight + arena.contourSize);
                 }).toList();
                 CompletableFuture<Void> unpasterAll = ObsidianUtil.future(plotPasting);
 
                 currentAction = unpasterAll.thenAccept(e -> stop());
             });
+        }
+        LanguagePlaceholder lp = LanguageConfig.getInstance().forGameState(state, -1);
+        if (lp != null) {
+            for (Player p : players)
+                p.sendMessage(lp.with(p).component());
         }
     }
 
@@ -388,6 +427,11 @@ public class RunningArena implements Listener {
     }
 
     public void tick() {
+        LanguagePlaceholder lp = LanguageConfig.getInstance().forGameState(state, countdown);
+        if (lp != null) {
+            for (Player p : players)
+                p.sendMessage(lp.with(p).component());
+        }
         if (state == ArenaState.LOBBY) {
             players.forEach(player -> player.getInventory().setItem(4,
                     Data.getInstance().getItems().voteItems.get(6).forPlayer(player).build()));
@@ -462,9 +506,6 @@ public class RunningArena implements Listener {
     }
 
     public List<LanguagePlaceholder> getScoreboardLines(Player player, Scoreboard board) {
-        final var lines = new ArrayList<LanguagePlaceholder>();
-        final var arena = Service.get(Arenas.class).getArenaForPlayer(player);
-
         List<LanguagePlaceholder> scoreboard_lines = List.of();
         if (state == ArenaState.LOBBY)
             scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
@@ -477,10 +518,15 @@ public class RunningArena implements Listener {
         else if (state == ArenaState.SHOWING_WINNER)
             scoreboard_lines = LanguageConfig.getInstance().scoreboard().winnerScoreboard();
 
-        scoreboard_lines.stream()
+        return processPlaceholders(scoreboard_lines, board.getPlayer());
+    }
+
+    public List<LanguagePlaceholder> processPlaceholders(List<LanguagePlaceholder> source, Player p) {
+        final var lines = new ArrayList<LanguagePlaceholder>();
+        source.stream()
                 .filter(Objects::nonNull)
                 .forEach(line -> {
-                    lines.add(line.with(board.getPlayer())
+                    lines.add(line.with(p)
                             .replace("%bb_version%", BuildBattle.getInstance().getVersion())
                             .replace("%theme%", theme)
                             .replace("%state%", state.toString())
@@ -495,7 +541,7 @@ public class RunningArena implements Listener {
                             .replace("%seconds%", String.valueOf(seconds()))
                             .replace("%current_plot%",
                                     current_plot != null ? current_plot.owner.displayName() : Component.empty())
-                            .replace("%player_count%", String.valueOf(arena.players.size()))
+                            .replace("%player_count%", String.valueOf(players.size()))
                             .replace("%arena%", arena.getName()));
                 });
         return lines;

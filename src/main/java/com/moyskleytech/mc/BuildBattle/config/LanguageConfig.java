@@ -19,6 +19,7 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ConfigGenerator.ConfigSection;
+import com.moyskleytech.mc.BuildBattle.game.ArenaState;
 import com.moyskleytech.mc.BuildBattle.game.Plot;
 import com.moyskleytech.mc.BuildBattle.placeholderapi.Placeholders;
 import com.moyskleytech.mc.BuildBattle.service.Service;
@@ -161,7 +162,6 @@ public class LanguageConfig extends Service {
         } catch (Throwable e) {
             throw new ServiceLoadException(e);
         }
-
     }
 
     public ConfigurationNode node(Object... keys) {
@@ -186,6 +186,15 @@ public class LanguageConfig extends Service {
                     .key("version").defValue(plugin.getVersion())
                     .key("voted").defValue("%prefix%You voted for the current plot");
 
+
+            ConfigSection gamestate = section.section("gamestate");
+            for(ArenaState state: ArenaState.values())
+            {
+                ConfigSection s = gamestate.section(state.name());
+                s.key("-2").defValue("-1 for when the arena switch, othewise value of the timer when it sends");
+                s.back();
+            }
+            gamestate.back();
             ErrorMessages.build(section);
             EditorMessages.build(section);
             ScoreboardConfig.build(section);
@@ -195,6 +204,13 @@ public class LanguageConfig extends Service {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    public LanguagePlaceholder forGameState(ArenaState name, int cooldown) {
+        String maybeMessage = getString("gamestate." + name.name() + "." + cooldown);
+        if (maybeMessage != null)
+            return LanguagePlaceholder.of(maybeMessage);
+        return null;
     }
 
     public ErrorMessages error() {
@@ -255,6 +271,7 @@ public class LanguageConfig extends Service {
                     name);
         }
     }
+
 
     public UiConfig ui() {
         return new UiConfig();
@@ -363,14 +380,13 @@ public class LanguageConfig extends Service {
                             "&7BBv%bb_version%"))
                     .key("winnerScoreboard")
                     .defValue(List.of(
-                        "&r",
-                        "&rArena: %arena%",
-                        "&rTheme: %theme%",
-                        "&rWinner:%winner%",
-                        "&rGame ending in:%countdown%s",
-                        "&r",
-                        "&7BBv%bb_version%"
-                    ))
+                            "&r",
+                            "&rArena: %arena%",
+                            "&rTheme: %theme%",
+                            "&rWinner:%winner%",
+                            "&rGame ending in:%countdown%s",
+                            "&r",
+                            "&7BBv%bb_version%"))
                     .back();
         }
 
@@ -405,9 +421,53 @@ public class LanguageConfig extends Service {
         }
     }
 
+    public WinnerMessageConfig winnerMessage() {
+        return new WinnerMessageConfig();
+    }
+
+    public class WinnerMessageConfig {
+
+        public static ConfigSection build(ConfigSection section) throws SerializationException {
+            return section.section("winner-message")
+                    .key("header")
+                    .defValue(List.of(
+                            "&r--------------------",
+                            "&r",
+                            "&r     Winner: %winner%&r [%winnerscore%]",
+                            "&r",
+                            "&7BBv%bb_version%"))
+                    .key("footer")
+                    .defValue(List.of("&r",
+                            "&r",
+                            "&r--------------------"))
+                    .key("line")
+                    .defValue("&r     %position%: %name% [%score%]")
+                    .key("number-player-shown").defValue(3)
+                    .back();
+        }
+
+        public List<LanguagePlaceholder> header() {
+            return getStringList("winner-message.header").stream().map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+
+        public List<LanguagePlaceholder> footer() {
+            return getStringList("winner-message.footer").stream().map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+        public LanguagePlaceholder row() {
+            return LanguagePlaceholder.of(getString("winner-message.line"));
+        }
+        public int numberPlayerShown()
+        {
+            return getInt("winner-message.numper-player-shown", 3);
+        }
+    }
+
     public LanguagePlaceholder voted() {
         return LanguagePlaceholder.of(getString("voted"));
     }
+
     public void forceReload() {
         loadDefaults();
     }
@@ -466,7 +526,5 @@ public class LanguageConfig extends Service {
         }
         return str;
     }
-
-    
 
 }
