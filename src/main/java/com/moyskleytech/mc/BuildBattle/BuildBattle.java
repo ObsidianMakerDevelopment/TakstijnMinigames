@@ -1,6 +1,6 @@
 package com.moyskleytech.mc.BuildBattle;
 
-import com.com.moyskleytech.mc.obsidianbb.ObsidianBB.BuildConfig;
+import com.moyskleytech.mc.obsidianbb.ObsidianBB.BuildConfig;
 import com.moyskleytech.mc.BuildBattle.commands.CommandManager;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
@@ -18,6 +18,7 @@ import com.moyskleytech.mc.BuildBattle.services.Paster;
 import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
+import com.moyskleytech.mc.BuildBattle.utils.Scheduler;
 import com.moyskleytech.mc.BuildBattle.utils.Logger.Level;
 
 import lombok.Getter;
@@ -38,7 +39,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -112,33 +112,38 @@ public class BuildBattle extends JavaPlugin {
 
     public World createEmptyWorld(World.Environment environment, String name) {
         long begin = System.nanoTime();
-        WorldCreator worldCreator = new WorldCreator("bb_worlds/"+name)
+        WorldCreator worldCreator = new WorldCreator("bb_worlds/" + name)
                 .generator(chunkGenerator)
                 .keepSpawnLoaded(TriState.FALSE)
                 .environment(environment);
-        World w = Bukkit.createWorld(worldCreator);
-        
-        w.setDifficulty(Difficulty.NORMAL);
-        w.setSpawnFlags(true,true);
-        w.setPVP(false);
-        w.setStorm(false);
-        w.setThundering(false);
-        w.setWeatherDuration(Integer.MAX_VALUE);
-        w.setKeepSpawnInMemory(false);
-        w.setTicksPerSpawns(SpawnCategory.ANIMAL, 1);
-        w.setTicksPerSpawns(SpawnCategory.MONSTER, 1);
-        w.setAutoSave(false);
-        w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        w.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
-        w.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
-        w.setGameRule(GameRule.DO_FIRE_TICK, false);
-        w.setGameRule(GameRule.MOB_GRIEFING, false);
-        w.setGameRule(GameRule.DO_MOB_SPAWNING, false);
-        w.setGameRule(GameRule.DROWNING_DAMAGE, false);
+        try {
+            World w = Bukkit.createWorld(worldCreator);
 
-        Logger.trace("Created world in " + (System.nanoTime() - begin) + " nanoseconds");
-        worlds.add(w);
-        return w;
+            w.setDifficulty(Difficulty.NORMAL);
+            w.setSpawnFlags(true, true);
+            w.setPVP(false);
+            w.setStorm(false);
+            w.setThundering(false);
+            w.setWeatherDuration(Integer.MAX_VALUE);
+            w.setKeepSpawnInMemory(false);
+            w.setTicksPerSpawns(SpawnCategory.ANIMAL, 1);
+            w.setTicksPerSpawns(SpawnCategory.MONSTER, 1);
+            w.setAutoSave(false);
+            w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+            w.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+            w.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
+            w.setGameRule(GameRule.DO_FIRE_TICK, false);
+            w.setGameRule(GameRule.MOB_GRIEFING, false);
+            w.setGameRule(GameRule.DO_MOB_SPAWNING, false);
+            w.setGameRule(GameRule.DROWNING_DAMAGE, false);
+
+            Logger.trace("Created world in " + (System.nanoTime() - begin) + " nanoseconds");
+            worlds.add(w);
+            return w;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return null;
+        }
     }
 
     public void reload() {
@@ -165,7 +170,7 @@ public class BuildBattle extends JavaPlugin {
 
     public void deleteWorld(World world) {
         File toDelete = world.getWorldFolder();
-        world.getPlayers().forEach(player->player.teleport(ObsidianUtil.getMainLobby()));
+        world.getPlayers().forEach(player -> player.teleport(ObsidianUtil.getMainLobby()));
         Chunk[] chunks = world.getLoadedChunks();
         for (Chunk chunk : chunks) {
             chunk.unload(false);
@@ -175,19 +180,15 @@ public class BuildBattle extends JavaPlugin {
             for (Chunk chunk : chunkss) {
                 chunk.unload(false);
             }
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    try {
-                        deleteDirectory(toDelete);
-                        worlds.remove(world);
-                        this.cancel();
-                    } catch (Throwable t) {
+            Scheduler.getInstance().runTaskTimer((task) -> {
+                try {
+                    deleteDirectory(toDelete);
+                    worlds.remove(world);
+                    task.cancel();
+                } catch (Throwable t) {
 
-                    }
                 }
-            }.runTaskTimer(this, 50, 100);
-
+            }, 50, 100);
         } else {
             Logger.error("Could not delete world {}", world);
         }
@@ -299,7 +300,5 @@ public class BuildBattle extends JavaPlugin {
     public JavaPlugin getJavaPlugin() {
         return instance;
     }
-
-   
 
 }

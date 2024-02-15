@@ -5,7 +5,7 @@ plugins {
     id("com.github.gmazzo.buildconfig") version "3.1.0"
 }
 
-group = "com.com.moyskleytech.mc.obsidianbb"
+group = "com.moyskleytech.mc.obsidianbb"
 version = properties["CORE_VERSION"]
 description = "ObsidianBB"
 buildConfig {
@@ -54,7 +54,8 @@ dependencies {
     implementation("com.github.cryptomorin:XSeries:9.3.1") { isTransitive = false }
 
     // Other dependencies that are not required or already available at runtime
-    compileOnly("org.purpurmc.purpur:purpur-api:1.19.3-R0.1-SNAPSHOT")
+    //compileOnly("org.purpurmc.purpur:purpur-api:1.19.3-R0.1-SNAPSHOT")
+    compileOnly("dev.folia:folia-api:1.20.2-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.9.2")
     compileOnly("org.projectlombok:lombok:1.18.22")
 
@@ -117,10 +118,18 @@ java {
         vendor.set(JvmVendorSpec.ADOPTOPENJDK)
     }
 }
+tasks.withType<JavaCompile>().configureEach {
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    })
+}
 
 // Maven publishing
 publishing {
     publications.create<MavenPublication>("maven") {
-        from(components["java"])
+        setGroupId("com.moyskleytech.mc.obsidianbb")
+        setArtifactId("ObsidianBB")
+        setVersion("1.0.0")
+        artifact(tasks["shadowJar"])
     }
 }

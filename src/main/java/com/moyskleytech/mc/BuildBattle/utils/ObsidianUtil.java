@@ -115,11 +115,8 @@ public class ObsidianUtil {
 
     public static void cancelTask(BukkitTask task) {
         if (task != null) {
-            if (Bukkit.getScheduler().isCurrentlyRunning(task.getTaskId())
-                    || Bukkit.getScheduler().isQueued(task.getTaskId())) {
-                task.cancel();
-                Logger.trace("cancelTask {}", task);
-            }
+            task.cancel();
+            Logger.trace("cancelTask {}", task);
         }
     }
 

@@ -230,7 +230,8 @@ public class RunningArena implements Listener {
     }
 
     private void setState(ArenaState state) {
-
+        if (this.state == state)
+            return;
         this.state = state;
         if (state == ArenaState.LOBBY) {
             preventBuildDestroy = true;
@@ -338,10 +339,9 @@ public class RunningArena implements Listener {
                         if (i < plotsList.size()) {
                             Plot aPlot = plotsList.get(i);
                             center.add(
-                                cfg.row().replace("%name%", aPlot.owner.displayName())
-                                .replace("position", String.valueOf(i+1))
-                                .replace("score", String.valueOf(aPlot.getScore()))
-                            );
+                                    cfg.row().replace("%name%", aPlot.owner.displayName())
+                                            .replace("position", String.valueOf(i + 1))
+                                            .replace("score", String.valueOf(aPlot.getScore())));
                         }
                     }
                     center = processPlaceholders(center, p);
@@ -350,7 +350,7 @@ public class RunningArena implements Listener {
                     wholeMsaage.addAll(header);
                     wholeMsaage.addAll(center);
                     wholeMsaage.addAll(footer);
-                    for(var lp:wholeMsaage)
+                    for (var lp : wholeMsaage)
                         p.sendMessage(lp.component());
                 }
             }
@@ -423,7 +423,9 @@ public class RunningArena implements Listener {
     }
 
     public void openVoteInventory(Player player) {
-        player.openInventory(votingUIs.get(player.getUniqueId()).getInventory());
+        var ui = votingUIs.get(player.getUniqueId()).getInventory();
+        if (ui != null)
+            player.openInventory(ui);
     }
 
     public void tick() {

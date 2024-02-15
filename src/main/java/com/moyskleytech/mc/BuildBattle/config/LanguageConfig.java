@@ -186,10 +186,8 @@ public class LanguageConfig extends Service {
                     .key("version").defValue(plugin.getVersion())
                     .key("voted").defValue("%prefix%You voted for the current plot");
 
-
             ConfigSection gamestate = section.section("gamestate");
-            for(ArenaState state: ArenaState.values())
-            {
+            for (ArenaState state : ArenaState.values()) {
                 ConfigSection s = gamestate.section(state.name());
                 s.key("-2").defValue("-1 for when the arena switch, othewise value of the timer when it sends");
                 s.back();
@@ -198,6 +196,7 @@ public class LanguageConfig extends Service {
             ErrorMessages.build(section);
             EditorMessages.build(section);
             ScoreboardConfig.build(section);
+            WinnerMessageConfig.build(section);
             UiConfig.build(section);
 
             generator.saveIfModified();
@@ -207,9 +206,9 @@ public class LanguageConfig extends Service {
     }
 
     public LanguagePlaceholder forGameState(ArenaState name, int cooldown) {
-        String maybeMessage = getString("gamestate." + name.name() + "." + cooldown);
+        String maybeMessage = getString("gamestate." + name.name() + "." + cooldown, null);
         if (maybeMessage != null)
-            return LanguagePlaceholder.of(maybeMessage);
+            return LanguagePlaceholder.of(ChatColor.translateAlternateColorCodes('&', maybeMessage));
         return null;
     }
 
@@ -271,7 +270,6 @@ public class LanguageConfig extends Service {
                     name);
         }
     }
-
 
     public UiConfig ui() {
         return new UiConfig();
@@ -440,8 +438,7 @@ public class LanguageConfig extends Service {
                     .defValue(List.of("&r",
                             "&r",
                             "&r--------------------"))
-                    .key("line")
-                    .defValue("&r     %position%: %name% [%score%]")
+                    .key("line").defValue("&r     %position%: %name% [%score%]")
                     .key("number-player-shown").defValue(3)
                     .back();
         }
@@ -455,11 +452,12 @@ public class LanguageConfig extends Service {
             return getStringList("winner-message.footer").stream().map(line -> LanguagePlaceholder.of(line))
                     .toList();
         }
+
         public LanguagePlaceholder row() {
             return LanguagePlaceholder.of(getString("winner-message.line"));
         }
-        public int numberPlayerShown()
-        {
+
+        public int numberPlayerShown() {
             return getInt("winner-message.numper-player-shown", 3);
         }
     }
@@ -515,8 +513,10 @@ public class LanguageConfig extends Service {
 
     @SuppressWarnings("all")
     public String getString(@Nonnull String path) {
-        return ChatColor.translateAlternateColorCodes('&',
-                Objects.requireNonNull(node((Object[]) path.split("\\.")).getString()));
+        String s = node((Object[]) path.split("\\.")).getString();
+        if (s != null)
+            return ChatColor.translateAlternateColorCodes('&', s);
+        return null;
     }
 
     public String getString(String path, String def) {

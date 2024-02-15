@@ -8,3 +8,4 @@ depend: [  ]
 softdepend:
   - "PlaceholderAPI"
   - "Citizens"
+folia-supported: true

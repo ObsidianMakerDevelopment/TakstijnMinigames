@@ -2,6 +2,7 @@ package com.moyskleytech.mc.BuildBattle.services;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
+import com.moyskleytech.mc.BuildBattle.utils.Scheduler;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import java.util.UUID;
 
 import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.Bukkit;
 
 public class WorldPool extends Service {
 
@@ -28,17 +29,13 @@ public class WorldPool extends Service {
         super.onLoad();
         if (free_worlds.size() == 0)
             BuildBattle.getInstance().deleteDirectory(new File("bb_worlds"));
-
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    for (int i = 0; i < 2; i++) {
-                        freeWorld(getWorld(Environment.NORMAL));
-                        freeWorld(getWorld(Environment.NETHER));
-                        freeWorld(getWorld(Environment.THE_END));
-                    }
-                }
-            }.runTaskLater(BuildBattle.getInstance(), 20);
+        Scheduler.getInstance().runTaskLater(() -> {
+            for (int i = 0; i < 2; i++) {
+                freeWorld(getWorld(Environment.NORMAL));
+                freeWorld(getWorld(Environment.NETHER));
+                freeWorld(getWorld(Environment.THE_END));
+            }
+        }, 20);
     }
 
     public World getWorld(Environment type) {
@@ -50,9 +47,15 @@ public class WorldPool extends Service {
                 used_worlds.add(w);
                 return w;
             } else {
-                World w = BuildBattle.getInstance().createEmptyWorld(type, UUID.randomUUID().toString());
-                used_worlds.add(w);
-                return w;
+                try {
+                    World w = BuildBattle.getInstance().createEmptyWorld(type, UUID.randomUUID().toString());
+                    if (w == null)
+                        w = Bukkit.getWorlds().get(0);
+                    used_worlds.add(w);
+                    return w;
+                } catch (Throwable t) {
+                    return Bukkit.getWorlds().get(0);
+                }
             }
         }
     }

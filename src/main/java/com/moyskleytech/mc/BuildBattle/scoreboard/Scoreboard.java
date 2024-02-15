@@ -5,7 +5,6 @@
 package com.moyskleytech.mc.BuildBattle.scoreboard;
 
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
@@ -20,6 +19,8 @@ import com.moyskleytech.mc.BuildBattle.scoreboard.builder.ScoreboardBuilder;
 import com.moyskleytech.mc.BuildBattle.scoreboard.data.PlaceholderData;
 import com.moyskleytech.mc.BuildBattle.scoreboard.scoreboardr.board.BoardPlayer;
 import com.moyskleytech.mc.BuildBattle.scoreboard.scoreboardr.board.ConfigBoard;
+import com.moyskleytech.mc.BuildBattle.utils.Scheduler;
+import com.moyskleytech.mc.BuildBattle.utils.Scheduler.Task;
 
 import org.bukkit.entity.Player;
 import java.util.List;
@@ -33,8 +34,9 @@ import me.clip.placeholderapi.PlaceholderAPI;
 
 public class Scoreboard {
     private ConfigBoard holder;
-    protected BukkitTask animationTask;
-    protected BukkitTask updateTask;
+    private Task holderTask;
+    protected Task animationTask;
+    protected Task updateTask;
     private long ANIMATION_TASK_INTERVAL;
     private long UPDATE_TASK_INTERVAL;
     private boolean occupyMaxHeight;
@@ -58,7 +60,10 @@ public class Scoreboard {
         this.player = player;
         this.holder = new ConfigBoard(player.getName());
         BoardPlayer.getBoardPlayer(player).attachConfigBoard(this.holder);
-        this.holder.runTaskTimerAsynchronously(BuildBattle.getPluginInstance(), 1, 1);
+
+        holderTask = Scheduler.getInstance().runTaskTimerAsync((task)->{
+            holder.run();
+        }, 1, 1);
         this.startUpdateTask();
         ScoreboardManager.getInstance().addToCache(this);
     }
@@ -114,9 +119,7 @@ public class Scoreboard {
 
     private void cancelUpdateTask() {
         if (this.updateTask != null) {
-            if (Bukkit.getScheduler().isQueued(this.updateTask.getTaskId())
-                    || Bukkit.getScheduler().isCurrentlyRunning(this.updateTask.getTaskId())
-                    || this.updateTaskRunning) {
+            if (this.updateTaskRunning) {
                 this.updateTask.cancel();
             }
             this.updateTask = null;
@@ -159,7 +162,7 @@ public class Scoreboard {
     }
 
     public void destroy() {
-        holder.cancel();
+        holderTask.cancel();
 
         this.cancelTasks();
         ScoreboardManager.getInstance().removeFromCache(this.player.getUniqueId());
@@ -191,21 +194,20 @@ public class Scoreboard {
     protected void startUpdateTask() {
         this.cancelUpdateTask();
         this.updateTaskRunning = true;
-        this.updateTask = new BukkitRunnable() {
-            public void run() {
-                if (Scoreboard.this.holder == null) {
-                    this.cancel();
+        this.updateTask =  Scheduler.getInstance().runTaskTimer((task)->{
+            if (Scoreboard.this.holder == null) {
+                task.cancel();
+                return;
+            }
+            if (Scoreboard.this.callback != null) {
+                final boolean cancelled = Scoreboard.this.callback.onCallback(Scoreboard.this);
+                if (cancelled) {
                     return;
                 }
-                if (Scoreboard.this.callback != null) {
-                    final boolean cancelled = Scoreboard.this.callback.onCallback(Scoreboard.this);
-                    if (cancelled) {
-                        return;
-                    }
-                }
-                refresh();
             }
-        }.runTaskTimer((Plugin) BuildBattle.getPluginInstance(), 0L, this.UPDATE_TASK_INTERVAL);
+            refresh();
+        }, 0,  this.UPDATE_TASK_INTERVAL);
+       
     }
 
     protected void cancelTasks() {

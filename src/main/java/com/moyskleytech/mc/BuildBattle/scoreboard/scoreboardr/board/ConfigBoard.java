@@ -5,7 +5,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
 
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig.LanguagePlaceholder;
@@ -24,7 +23,7 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class ConfigBoard extends BukkitRunnable {
+public class ConfigBoard {
 
     public String board;
     private String objectiveName = "";
@@ -108,7 +107,6 @@ public class ConfigBoard extends BukkitRunnable {
             ChatColor.COLOR_CHAR + "b", ChatColor.COLOR_CHAR + "c", ChatColor.COLOR_CHAR + "d",
             ChatColor.COLOR_CHAR + "e", ChatColor.COLOR_CHAR + "f" };
 
-    @Override
     public void run() {
         if (!this.enabled)
             return;

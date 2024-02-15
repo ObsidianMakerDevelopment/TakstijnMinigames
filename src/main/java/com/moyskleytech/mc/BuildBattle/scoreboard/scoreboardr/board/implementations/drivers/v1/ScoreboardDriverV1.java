@@ -140,11 +140,22 @@ public class ScoreboardDriverV1 implements IBoard {
             for (int i = 0; i < this.lines; i++) {
                 Team team = board.getTeam(i + "");
                 if (team == null) {
-                    Team t = this.board.registerNewTeam(i + "");
-                    t.addEntry(ChatColor.values()[i] + "");
-                    this.objective.getScore(ChatColor.values()[i] + "").setScore(score);
-                    score--;
+                    try {
+                        Team t = this.board.registerNewTeam(i + "");
+                        t.addEntry(ChatColor.values()[i] + "");
+                        this.objective.getScore(ChatColor.values()[i] + "").setScore(score);
+                    } catch (Throwable tr) {
+
+                    }
+                } else {
+                    try {
+                        this.objective.getScore(ChatColor.values()[i] + "").setScore(score);
+                    } catch (Throwable tr) {
+
+                    }
                 }
+                score--;
+
             }
             for (int i = board.getTeams().size() - 1; i >= this.lines; i--) {
                 Team team = board.getTeam(i + "");

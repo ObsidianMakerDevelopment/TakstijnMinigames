@@ -1,24 +1,21 @@
 package com.moyskleytech.mc.BuildBattle.game;
 
 import org.bukkit.event.Listener;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
-import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
+import com.moyskleytech.mc.BuildBattle.utils.Scheduler;
+import com.moyskleytech.mc.BuildBattle.utils.Scheduler.Task;
 
 public class TickService extends Service implements Listener {
-    
-    BukkitTask task;
+
+    Task task;
+
     @Override
     public void onLoad() throws ServiceLoadException {
-        task = new BukkitRunnable() {
-            @Override
-            public void run() {
-                Arenas arenas = Service.get(Arenas.class);
-                arenas.getRunningArenas().forEach(arena->arena.tick());
-            }
-        }.runTaskTimer(BuildBattle.getInstance(), 20, 20);
+        task=Scheduler.getInstance().runTaskTimerAsync((task)->{
+            Arenas arenas = Service.get(Arenas.class);
+            arenas.getRunningArenas().forEach(arena->arena.tick());
+        }, 20, 20);
         super.onLoad();
     }
 
