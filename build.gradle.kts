@@ -7,7 +7,7 @@ plugins {
 
 group = "com.moyskleytech.mc.obsidianbb"
 version = properties["CORE_VERSION"]
-description = "ObsidianBB"
+description = "TakstijnMinigames"
 buildConfig {
     buildConfigField("String", "APP_NAME", "\"${project.name}\"")
     buildConfigField("String", "APP_VERSION", "\"${properties["CORE_VERSION"]}\"")
@@ -56,7 +56,7 @@ dependencies {
     // Other dependencies that are not required or already available at runtime
     //compileOnly("org.purpurmc.purpur:purpur-api:1.19.3-R0.1-SNAPSHOT")
     compileOnly("dev.folia:folia-api:1.20.2-R0.1-SNAPSHOT")
-    compileOnly("me.clip:placeholderapi:2.9.2")
+    compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("org.projectlombok:lombok:1.18.22")
 
     // Enable lombok annotation processing

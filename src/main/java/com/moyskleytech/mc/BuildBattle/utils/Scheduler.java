@@ -72,8 +72,7 @@ public abstract class Scheduler {
 
         @Override
         public Task runChunkTask(Location e, long delay, Runnable r) {
-            if (delay == 0)
-            {
+            if (delay == 0) {
                 Bukkit.getServer().getRegionScheduler().execute(BuildBattle.getInstance(), e, () -> {
                     r.run();
                 });
@@ -191,15 +190,17 @@ public abstract class Scheduler {
 
         @Override
         public Task runChunkTask(Location e, long delay, Runnable r) {
-            if(delay <=0) {
-                r.run();
-                return null;
+            if (delay <= 0) {
+                return new NormalTask(Bukkit.getScheduler().runTask(BuildBattle.getInstance(), r));
             }
             return this.runTaskLater(r, delay);
         }
 
         @Override
         public Task runTaskLater(Runnable r, long delay) {
+            if (delay <= 0) {
+                return new NormalTask(Bukkit.getScheduler().runTask(BuildBattle.getInstance(), r));
+            }
             return new NormalTask(Bukkit.getScheduler().runTaskLater(BuildBattle.getInstance(), r, delay));
         }
 

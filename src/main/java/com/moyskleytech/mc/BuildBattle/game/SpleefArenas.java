@@ -21,28 +21,28 @@ import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.Data;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
 
-public class Arenas extends Service implements Listener {
-    private List<Arena> arenas;
-    private List<RunningArena> runningArenas = new ArrayList<>();
-    private Map<Player, RunningArena> arenaForPlayer = new HashMap<>();
+public class SpleefArenas extends Service implements Listener {
+    private List<SpleefArena> arenas;
+    private List<SpleefRunningArena> runningArenas = new ArrayList<>();
+    private Map<Player, SpleefRunningArena> arenaForPlayer = new HashMap<>();
     private File arenasFolder;
 
-    public List<Arena> getArenas() {
+    public List<SpleefArena> getArenas() {
         Logger.trace("Arenas::getArenas()");
         return new ArrayList<>(arenas);
     }
 
-    public List<RunningArena> getRunningArenas() {
+    public List<SpleefRunningArena> getRunningArenas() {
         // Logger.trace("Arenas::getRunningArenas()");
         return new ArrayList<>(runningArenas);
     }
 
-    public void addRunning(RunningArena arena) {
+    public void addRunning(SpleefRunningArena arena) {
         Logger.trace("Arenas::addRunning({})", arena);
         runningArenas.add(arena);
     }
 
-    public void removeRunning(RunningArena arena) {
+    public void removeRunning(SpleefRunningArena arena) {
         Logger.trace("Arenas::removeRunning({})", arena);
         runningArenas.remove(arena);
     }
@@ -57,7 +57,7 @@ public class Arenas extends Service implements Listener {
         Data data = Service.get(Data.class);
         arenas = new ArrayList<>();
         for (File arena : arenasFolder.listFiles()) {
-            Arena arena2 = (data.load(Arena.class, arena));
+            SpleefArena arena2 = (data.load(SpleefArena.class, arena));
             if (!arena.getName().equals(arena2.getId().toString() + ".yml")) {
                 throw new ServiceLoadException("File " + arena + " contains arena " + arena2.getId()
                         + " and should be named " + arena2.getId() + ".yml");
@@ -69,7 +69,7 @@ public class Arenas extends Service implements Listener {
         super.onLoad();
     }
 
-    public ActionResult register(Arena a) {
+    public ActionResult register(SpleefArena a) {
         Logger.trace("Arenas::register({})", a);
         Data data = Service.get(Data.class);
         if (byId(a.getId()) != null) {
@@ -81,7 +81,7 @@ public class Arenas extends Service implements Listener {
         return ActionResult.success();
     }
 
-    public ActionResult save(Arena a) {
+    public ActionResult save(SpleefArena a) {
         Logger.trace("Arenas::save({})", a);
 
         if (!register(a).isSuccess()) {
@@ -101,7 +101,7 @@ public class Arenas extends Service implements Listener {
         super.onUnload();
     }
 
-    public void put(Player p, RunningArena runningArena) {
+    public void put(Player p, SpleefRunningArena runningArena) {
         Logger.trace("Arenas::put({},{})", p, runningArena);
 
         if (runningArena == null)
@@ -110,7 +110,7 @@ public class Arenas extends Service implements Listener {
             arenaForPlayer.put(p, runningArena);
     }
 
-    public RunningArena getArenaForPlayer(Player p) {
+    public SpleefRunningArena getArenaForPlayer(Player p) {
         // Logger.trace("Arenas::getArenaForPlayer({})",p);
 
         return arenaForPlayer.get(p);
@@ -124,18 +124,19 @@ public class Arenas extends Service implements Listener {
     public ActionResult joinRandomly(Player player) {
         Logger.trace("Arenas::joinRandomly({})", player);
 
-        Optional<RunningArena> joinable = runningArenas.stream().filter(ra -> ra.state == ArenaState.LOBBY).findAny();
+        Optional<SpleefRunningArena> joinable = runningArenas.stream().filter(ra -> ra.state == SpleefArenaState.LOBBY)
+                .findAny();
         if (joinable.isPresent()) {
             joinable.get().join(player);
             return ActionResult.success();
         } else {
-            List<Arena> maps = getArenas();
+            List<SpleefArena> maps = getArenas();
             Collections.shuffle(maps);
             if (maps.size() == 0)
                 return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
-            Arena toStart = maps.get(0);
-            RunningArena running = toStart.start();
+            SpleefArena toStart = maps.get(0);
+            SpleefRunningArena running = toStart.start();
             running.join(player);
             return ActionResult.success();
         }
@@ -150,41 +151,29 @@ public class Arenas extends Service implements Listener {
     public ActionResult join(Player player, String map, boolean allowExisting) {
         Logger.trace("Arenas::join({},{},{})", player, map, allowExisting);
 
-        Optional<RunningArena> joinable = runningArenas.stream()
-                .filter(ra -> ra.state == ArenaState.LOBBY && ra.arena.getName().equals(map)).findAny();
+        Optional<SpleefRunningArena> joinable = runningArenas.stream()
+                .filter(ra -> ra.state == SpleefArenaState.LOBBY && ra.arena.getName().equals(map)).findAny();
         if (allowExisting && joinable.isPresent()) {
             joinable.get().join(player);
             return ActionResult.success();
         } else {
-            Arena toStart = byName(map);
+            SpleefArena toStart = byName(map);
             if (toStart == null)
                 return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
-            RunningArena running = toStart.start();
+            SpleefRunningArena running = toStart.start();
             running.join(player);
             return ActionResult.success();
         }
     }
 
-    public ActionResult join(Player player, String map, String theme) {
-        Logger.trace("Arenas::join({},{},{})", player, map, theme);
-
-        Arena toStart = byName(map);
-        if (toStart == null)
-            return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
-
-        RunningArena running = toStart.start(theme);
-        running.join(player);
-        return ActionResult.success();
-    }
-
-    public Arena byName(String map) {
+    public SpleefArena byName(String map) {
         Logger.trace("Arenas::byName({})", map);
 
         return arenas.stream().filter(ar -> ar.getName().equalsIgnoreCase(map)).findAny().orElse(null);
     }
 
-    public Arena byId(UUID map) {
+    public SpleefArena byId(UUID map) {
         Logger.trace("Arenas::byId({})", map);
 
         return arenas.stream().filter(ar -> ar.getId().equals(map)).findAny().orElse(null);

@@ -1,4 +1,5 @@
 package com.moyskleytech.mc.BuildBattle.scoreboard.scoreboardr.plugin.utility;
+
 //https://github.com/RienBijl/Scoreboard-revision/blob/master/src/main/java/rien/bijl/Scoreboard/r/Plugin/Utility/ScoreboardStrings.java
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.ChatColor;
@@ -16,7 +17,6 @@ public class ScoreboardStrings {
 
     private static final Pattern pattern = Pattern.compile("\\{#[a-fA-F0-9]{6}}");
     private static final Pattern placeholderPattern = Pattern.compile("&#[a-fA-F0-9]{6}");
-
 
     public static String make(Player player, String content) {
         return colors(placeholders(player, content));
@@ -36,28 +36,24 @@ public class ScoreboardStrings {
         // List<LanguagePlaceholder> newList = new ArrayList<>();
 
         // for (LanguagePlaceholder str: list) {
-        //     newList.add(colors(str));
+        // newList.add(colors(str));
         // }
 
         // return newList;
     }
 
     public static String colors(String content) {
-        if (ServerVersion.minor() >= 16) {
-            Matcher match = pattern.matcher(content);
-            while (match.find()) {
-                String color = content.substring(match.start(), match.end());
-                content = content.replace(color, net.md_5.bungee.api.ChatColor.of(color.replaceAll("\\{|}", "")) + "");
-                match = pattern.matcher(content);
-            }
-            return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', content);
-        } else {
-            return ChatColor.translateAlternateColorCodes('&', content);
+        Matcher match = pattern.matcher(content);
+        while (match.find()) {
+            String color = content.substring(match.start(), match.end());
+            content = content.replace(color, net.md_5.bungee.api.ChatColor.of(color.replaceAll("\\{|}", "")) + "");
+            match = pattern.matcher(content);
         }
+        return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', content);
     }
 
     public static String placeholderColors(String content) {
-        if (content.contains("&#") && ServerVersion.minor() >= 16) {
+        if (content.contains("&#")) {
             Matcher match = placeholderPattern.matcher(content);
             while (match.find()) {
                 String color = content.substring(match.start(), match.end());
@@ -70,7 +66,8 @@ public class ScoreboardStrings {
     }
 
     public static String placeholders(Player player, String content) {
-        if(Session.getSession().enabled_dependencies.contains(Session.getSession().dependencies[0]) && org.bukkit.Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") &&
+        if (Session.getSession().enabled_dependencies.contains(Session.getSession().dependencies[0])
+                && org.bukkit.Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") &&
                 PlaceholderAPI.containsPlaceholders(content)) {
             return placeholderColors(PlaceholderAPI.setPlaceholders(player, content));
         }

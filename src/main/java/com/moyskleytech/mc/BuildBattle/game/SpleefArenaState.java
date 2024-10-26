@@ -1,6 +1,6 @@
 package com.moyskleytech.mc.BuildBattle.game;
 
-public enum ArenaState {
+public enum SpleefArenaState {
     LOBBY,
     STARTING,
     BUILDING,

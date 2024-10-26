@@ -21,14 +21,7 @@ public class ServerVersion {
 
     public static int minor()
     {
-        if (minor != -1) {
-            return minor;
-        }
-
-        String pack = Session.getSession().plugin.getServer().getClass().getPackage().getName();
-        String[] version = pack.substring(pack.lastIndexOf('.') + 1).substring(1).split("_");
-        minor = Integer.parseInt(version[1]);
-        return minor;
+        return 21;
     }
 
 }

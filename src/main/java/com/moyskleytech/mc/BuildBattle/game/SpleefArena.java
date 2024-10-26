@@ -14,7 +14,7 @@ import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 import lombok.Getter;
 
 @Getter
-public class Arena {
+public class SpleefArena {
     public UUID id;
     public Environment type = Environment.NORMAL;
     public int plotSize = 20;
@@ -27,28 +27,14 @@ public class Arena {
     public int lobbyHeight = 10;
     public int lobbyDuration = 60;
     public int gameDuration = 180;
-    public int voteDuration = 30;
-    public int winnerDuration = 60;
     public int minimumPlayers = 2;
 
-    public RunningArena start() {
-        Arenas arenas = Service.get(Arenas.class);
+    public SpleefRunningArena start() {
+        SpleefArenas arenas = Service.get(SpleefArenas.class);
         WorldPool worlds = Service.get(WorldPool.class);
 
         World world = worlds.getWorld(type);
-        RunningArena running = new RunningArena(this, world);
-
-        arenas.addRunning(running);
-
-        return running;
-    }
-
-    public RunningArena start(String theme) {
-        Arenas arenas = Service.get(Arenas.class);
-        WorldPool worlds = Service.get(WorldPool.class);
-
-        World world = worlds.getWorld(type);
-        RunningArena running = new RunningArena(this, world, theme);
+        SpleefRunningArena running = new SpleefRunningArena(this, world);
 
         arenas.addRunning(running);
 

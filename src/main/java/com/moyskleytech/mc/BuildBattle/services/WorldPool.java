@@ -3,12 +3,14 @@ package com.moyskleytech.mc.BuildBattle.services;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.utils.Scheduler;
+import com.moyskleytech.mc.BuildBattle.utils.Scheduler.Task;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -29,13 +31,31 @@ public class WorldPool extends Service {
         super.onLoad();
         if (free_worlds.size() == 0)
             BuildBattle.getInstance().deleteDirectory(new File("bb_worlds"));
-        Scheduler.getInstance().runTaskLater(() -> {
-            for (int i = 0; i < 2; i++) {
-                freeWorld(getWorld(Environment.NORMAL));
-                freeWorld(getWorld(Environment.NETHER));
-                freeWorld(getWorld(Environment.THE_END));
-            }
-        }, 20);
+        Scheduler.getInstance().runTaskTimer(
+                new Consumer<Scheduler.Task>() {
+                    int i = 0;
+                    List<World> worlds = new ArrayList<>();
+                    @Override
+                    public void accept(Task t) {
+                        worlds.add(getWorld(Environment.NORMAL));
+                        if (i++ == 3)
+                        {
+                            for(World w:worlds)
+                            {
+                                freeWorld(w);
+                            }
+                            t.cancel();
+                        }
+                    }
+
+                }, 20, 20);
+        /*
+         * new Runnable(){ {
+         * for (int i = 0; i < 2; i++) {
+         * freeWorld(getWorld(Environment.NORMAL));
+         * }
+         * }
+         */
     }
 
     public World getWorld(Environment type) {

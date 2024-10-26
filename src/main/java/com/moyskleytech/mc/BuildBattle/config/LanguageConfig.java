@@ -21,6 +21,7 @@ import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ConfigGenerator.ConfigSection;
 import com.moyskleytech.mc.BuildBattle.game.ArenaState;
 import com.moyskleytech.mc.BuildBattle.game.Plot;
+import com.moyskleytech.mc.BuildBattle.game.SpleefArenaState;
 import com.moyskleytech.mc.BuildBattle.placeholderapi.Placeholders;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
@@ -193,6 +194,14 @@ public class LanguageConfig extends Service {
                 s.back();
             }
             gamestate.back();
+
+            ConfigSection spleefgamestate = section.section("spleefgamestate");
+            for (SpleefArenaState state : SpleefArenaState.values()) {
+                ConfigSection s = gamestate.section(state.name());
+                s.key("-2").defValue("-1 for when the arena switch, othewise value of the timer when it sends");
+                s.back();
+            }
+            spleefgamestate.back();
             ErrorMessages.build(section);
             EditorMessages.build(section);
             ScoreboardConfig.build(section);
@@ -207,6 +216,13 @@ public class LanguageConfig extends Service {
 
     public LanguagePlaceholder forGameState(ArenaState name, int cooldown) {
         String maybeMessage = getString("gamestate." + name.name() + "." + cooldown, null);
+        if (maybeMessage != null)
+            return LanguagePlaceholder.of(ChatColor.translateAlternateColorCodes('&', maybeMessage));
+        return null;
+    }
+
+    public LanguagePlaceholder forSpleefGameState(SpleefArenaState name, int cooldown) {
+        String maybeMessage = getString("spleefgamestate." + name.name() + "." + cooldown, null);
         if (maybeMessage != null)
             return LanguagePlaceholder.of(ChatColor.translateAlternateColorCodes('&', maybeMessage));
         return null;
@@ -367,6 +383,29 @@ public class LanguageConfig extends Service {
                             "&rTime: %minutes%m%seconds%s",
                             "&r",
                             "&7BBv%bb_version%"))
+                    .key("lobbySpleefScoreboard")
+                    .defValue(List.of(
+                            "&r",
+                            "&rArena: %arena%",
+                            "&rPlayers: %player_count%",
+                            "&rStart in: %minutes%m%seconds%s",
+                            "&r",
+                            "&7BBv%bb_version%"))
+                    .key("startingSpleefScoreboard")
+                    .defValue(List.of("&r",
+                            "&rArena: %arena%",
+                            "&rTheme: %theme%",
+                            "&rGame initializing",
+                            "&r",
+                            "&7BBv%bb_version%"))
+                    .key("buildingSpleefScoreboard")
+                    .defValue(List.of(
+                            "&r",
+                            "&rArena: %arena%",
+                            "&rTheme: %theme%",
+                            "&rTime: %minutes%m%seconds%s",
+                            "&r",
+                            "&7BBv%bb_version%"))
                     .key("votingScoreboard")
                     .defValue(List.of(
                             "&r",
@@ -398,13 +437,30 @@ public class LanguageConfig extends Service {
                     .toList();
         }
 
+        public List<LanguagePlaceholder> lobbySpleefScoreboard() {
+            return getStringList("scoreboard.lobbySpleefScoreboard").stream().map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+
         public List<LanguagePlaceholder> startingScoreboard() {
             return getStringList("scoreboard.startingScoreboard").stream().map(line -> LanguagePlaceholder.of(line))
                     .toList();
         }
 
+        public List<LanguagePlaceholder> startingSpleefScoreboard() {
+            return getStringList("scoreboard.startingSpleefScoreboard").stream()
+                    .map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+
         public List<LanguagePlaceholder> buildingScoreboard() {
             return getStringList("scoreboard.buildingScoreboard").stream().map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+
+        public List<LanguagePlaceholder> buildingSpleefScoreboard() {
+            return getStringList("scoreboard.buildingSpleefScoreboard").stream()
+                    .map(line -> LanguagePlaceholder.of(line))
                     .toList();
         }
 

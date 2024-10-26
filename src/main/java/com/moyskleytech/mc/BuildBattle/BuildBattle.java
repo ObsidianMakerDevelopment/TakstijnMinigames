@@ -4,6 +4,7 @@ import com.moyskleytech.mc.obsidianbb.ObsidianBB.BuildConfig;
 import com.moyskleytech.mc.BuildBattle.commands.CommandManager;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
+import com.moyskleytech.mc.BuildBattle.game.SpleefArenas;
 import com.moyskleytech.mc.BuildBattle.game.TickService;
 import com.moyskleytech.mc.BuildBattle.generator.VoidGen;
 import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
@@ -97,6 +98,7 @@ public class BuildBattle extends JavaPlugin {
         registeredServices.add(new JoinLeaveListener());
         registeredServices.add(new ArenaProtection());
         registeredServices.add(new Arenas());
+        registeredServices.add(new SpleefArenas());
         registeredServices.add(new TickService());
         registeredServices.add(new ScoreboardManager());
 

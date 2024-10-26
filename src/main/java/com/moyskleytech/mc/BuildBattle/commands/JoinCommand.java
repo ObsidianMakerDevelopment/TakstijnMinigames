@@ -29,6 +29,7 @@ public class JoinCommand extends CommandManager.Command {
         onPostEnabled();
         super.onLoad();
     }
+
     public void onPostEnabled() {
         CommandManager.getInstance().getAnnotationParser().parse(this);
         init = true;
@@ -36,20 +37,19 @@ public class JoinCommand extends CommandManager.Command {
 
     @CommandMethod("bb autojoin")
     @CommandPermission("obsidian.bb.autojoin")
-    private void commandAutojoin(final  Player player) {
+    private void commandAutojoin(final Player player) {
         Arenas arenas = Service.get(Arenas.class);
         ActionResult result = arenas.joinRandomly(player);
-        if(!result.isSuccess())
-        {
+        if (!result.isSuccess()) {
             player.sendMessage(LanguageConfig.getInstance().getString(result.getErrorKey()));
         }
     }
 
     @CommandMethod("bb leave")
-    private void commandLeave(final  Player player) {
+    private void commandLeave(final Player player) {
         Arenas arenas = Service.get(Arenas.class);
         RunningArena arena = arenas.getArenaForPlayer(player);
-        if(arena == null)
+        if (arena == null)
             player.sendMessage(LanguageConfig.getInstance().error().notPlaying().with(player).component());
         else
             arena.leave(player);
@@ -57,15 +57,25 @@ public class JoinCommand extends CommandManager.Command {
 
     @CommandMethod("bb join <arena>")
     @CommandPermission("obsidian.bb.join")
-    private void commandJoin(final  Player player, final @Argument(value = "arena", suggestions = "arenas") String map) {
+    private void commandJoin(final Player player, final @Argument(value = "arena", suggestions = "arenas") String map) {
         Arenas arenas = Service.get(Arenas.class);
         arenas.join(player, map);
     }
 
     @CommandMethod("bb joinnew <arena>")
     @CommandPermission("obsidian.bb.joinnew")
-    private void commandJoinNew(final  Player player, final @Argument(value = "arena", suggestions = "arenas") String map) {
+    private void commandJoinNew(final Player player,
+            final @Argument(value = "arena", suggestions = "arenas") String map) {
         Arenas arenas = Service.get(Arenas.class);
-        arenas.join(player, map,false);
+        arenas.join(player, map, false);
+    }
+
+    @CommandMethod("bb createWithTheme <arena> <theme>")
+    @CommandPermission("obsidian.bb.createWithTheme")
+    private void commandJoinNewTheme(final Player player,
+            final @Argument(value = "arena", suggestions = "arenas") String map,
+            final @Argument(value = "theme") String theme) {
+        Arenas arenas = Service.get(Arenas.class);
+        arenas.join(player, map, theme);
     }
 }
