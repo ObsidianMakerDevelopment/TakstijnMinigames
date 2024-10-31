@@ -176,7 +176,7 @@ public class ObsidianConfig extends Service {
     public class PasterConfig {
         public static ConfigSection build(ConfigSection section) throws SerializationException {
             return section.section("paster")
-                    .key("blockPerTick").defValue(10)
+                    .key("blockPerTick").defValue(30000)
                     .key("tickAware").defValue(true)
                     .back();
         }

@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.function.Function;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
+import com.moyskleytech.mc.BuildBattle.game.SpleefArenas;
 
 @Getter
 public class CommandManager extends Service {
@@ -59,12 +60,14 @@ public class CommandManager extends Service {
     public CommandManager() {
         super();
         commands = new ArrayList<>();
-       
+
         commands.add(new JoinCommand());
+        commands.add(new SpleefJoinCommand());
         commands.add(new ForceCommand());
         commands.add(new TestCommand());
         commands.add(new ReloadCommand());
         commands.add(new AdminCommand());
+        commands.add(new SpleefAdminCommand());
 
         commands.forEach(arg0 -> {
             try {
@@ -138,14 +141,17 @@ public class CommandManager extends Service {
                 (commandSenderCommandContext, s) -> {
                     return arenas.names();
                 });
-
+        SpleefArenas spleefArenas = Service.get(SpleefArenas.class);
+        CommandManager.getInstance().getManager().getParserRegistry().registerSuggestionProvider("spleefarenas",
+                (commandSenderCommandContext, s) -> {
+                    return spleefArenas.names();
+                });
         commands.forEach(arg0 -> {
             try {
                 arg0.onLoad();
             } catch (ServiceLoadException e) {
                 e.printStackTrace();
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
             }
         });

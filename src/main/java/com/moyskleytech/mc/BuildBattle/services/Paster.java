@@ -10,6 +10,10 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Async.Schedule;
 
 import java.lang.management.MemoryType;
@@ -22,6 +26,7 @@ import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
+import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 import com.moyskleytech.mc.BuildBattle.utils.Scheduler;
 import com.moyskleytech.mc.BuildBattle.utils.Scheduler.Task;
 
@@ -42,20 +47,49 @@ public class Paster extends Service {
     }
 
     public CompletableFuture<Void> paste(Location source, Location destination, int width, int depth, int height) {
-        List<Location> offsets = new LinkedList<>();
-        for (int y = -height; y <= height; y++) {
-            for (int x = -width; x <= width; x++) {
-                for (int z = -depth; z <= depth; z++) {
-                    offsets.add(new Location(source.getWorld(), x, y, z));
-                }
-            }
-        }
+        return paste(source, destination, width, depth, height, null);
+    }
+
+    public CompletableFuture<Void> paste(Location source, Location destination, int width, int depth, int height,
+            CommandSender maybePlayerForSending) {
+        AtomicInteger x = new AtomicInteger(-width);
+        AtomicInteger y = new AtomicInteger(-height);
+        AtomicInteger z = new AtomicInteger(-depth);
+
         CompletableFuture<Void> paster = new CompletableFuture<>();
         int blockPerTick = ObsidianConfig.getInstance().paster().blockPerTick();
         boolean tickAware = ObsidianConfig.getInstance().paster().tickAware();
         Task task = Scheduler.getInstance().runTaskTimerAsync(
                 new Consumer<Scheduler.Task>() {
-                    Iterator<Location> iterator = offsets.iterator();
+                    public Vector getNext() {
+                        Vector toReturn = new Vector(x.get(), y.get(), z.get());
+                        if (y.get() < -height)
+                            return null;
+                        if (z.incrementAndGet() > depth) {
+                            z.set(-depth);
+                            if (x.incrementAndGet() > width) {
+                                x.set(-width);
+                                if (maybePlayerForSending != null) {
+                                    boolean isConnected = true;
+                                    if (maybePlayerForSending instanceof Player p) {
+                                        isConnected = p.isConnected();
+                                    }
+                                    if (isConnected) {
+                                        int range = height * 2;
+                                        int percent = 100 * (y.get() + height) / range;
+                                        maybePlayerForSending.sendActionBar(
+                                                ObsidianUtil
+                                                        .component("Pasting Y=" + y.get()+destination.getY() + " | " + percent + "%"));
+                                    }
+                                }
+                                if (y.incrementAndGet() > height) {
+
+                                }
+                            }
+                        }
+
+                        return toReturn;
+                    }
 
                     @Override
                     public void accept(Task task) {
@@ -65,9 +99,10 @@ public class Paster extends Service {
                         }
                         AtomicInteger blocks = new AtomicInteger();
                         for (AtomicInteger i = new AtomicInteger(); i.get() < blockPerTickAware; i.incrementAndGet()) {
-                            if (!iterator.hasNext())
+
+                            Vector offset = getNext();
+                            if (offset == null)
                                 break;
-                            Location offset = iterator.next();
                             Location src = source.clone().add(offset.getX(), offset.getY(), offset.getZ());
                             Scheduler.getInstance().runChunkTask(src, 0, () -> {
                                 Block sBlock = src.getBlock();
@@ -85,10 +120,10 @@ public class Paster extends Service {
                                     });
                                 }
                             });
-                            if (blocks.get() > 4 * blockPerTickAware)
+                            if (blocks.get() > 16 * blockPerTickAware)
                                 break;
                         }
-                        if (!iterator.hasNext()) {
+                        if (y.get() > height) {
                             Scheduler.getInstance().runTask(() -> {
                                 paster.complete(null);
                             });
@@ -102,20 +137,56 @@ public class Paster extends Service {
     }
 
     public CompletableFuture<Void> unpaste(Location destination, int width, int depth, int height) {
-        List<Location> offsets = new LinkedList<>();
-        for (int y = height; y >= -height; y--) {
-            for (int x = -width; x <= width; x++) {
-                for (int z = -depth; z <= depth; z++) {
-                    offsets.add(new Location(destination.getWorld(), x, y, z));
-                }
-            }
+        return unpaste(destination, width, depth, height, null);
+    }
+
+    public CompletableFuture<Void> unpaste(Location destination, int width, int depth, int height,
+            CommandSender maybePlayerForSending) {
+        List<Vector> offsets = new LinkedList<>();
+        AtomicInteger x = new AtomicInteger(-width);
+        AtomicInteger y = new AtomicInteger(height);
+        AtomicInteger z = new AtomicInteger(-depth);
+
+        int minY = destination.getWorld().getMinHeight();
+        int maxY = destination.getWorld().getMaxHeight();
+
+        while (y.get() + destination.getY() > maxY) {
+            y.decrementAndGet();
         }
         CompletableFuture<Void> paster = new CompletableFuture<>();
-        int blockPerTick = ObsidianConfig.getInstance().paster().blockPerTick();
+        int blockPerTick = 10000;//ObsidianConfig.getInstance().paster().blockPerTick();
         boolean tickAware = ObsidianConfig.getInstance().paster().tickAware();
         Task task = Scheduler.getInstance().runTaskTimerAsync(
                 new Consumer<Scheduler.Task>() {
-                    Iterator<Location> iterator = offsets.iterator();
+                    public Vector getNext() {
+                        Vector toReturn = new Vector(x.get(), y.get(), z.get());
+                        if (y.get() < -height)
+                            return null;
+                        if (z.incrementAndGet() > depth) {
+                            z.set(-depth);
+                            if (x.incrementAndGet() > width) {
+                                x.set(-width);
+                                if (maybePlayerForSending != null) {
+                                    boolean isConnected = true;
+                                    if (maybePlayerForSending instanceof Player p) {
+                                        isConnected = p.isConnected();
+                                    }
+                                    if (isConnected) {
+                                        int range = height * 2;
+                                        int percent = 100 * (height-y.get() ) / range;
+                                        maybePlayerForSending.sendActionBar(
+                                                ObsidianUtil
+                                                        .component("Pasting Y=" + y.get()+destination.getY() + " | " + percent + "%"));
+                                    }
+                                }
+                                if (y.decrementAndGet() < -height) {
+
+                                }
+                            }
+                        }
+
+                        return toReturn;
+                    }
 
                     @Override
                     public void accept(Task task) {
@@ -125,12 +196,14 @@ public class Paster extends Service {
                         }
                         AtomicInteger blocks = new AtomicInteger();
                         for (AtomicInteger i = new AtomicInteger(); i.get() < blockPerTickAware; i.incrementAndGet()) {
-                            if (!iterator.hasNext())
+
+                            Vector offset = getNext();
+                            if (offset == null)
                                 break;
-                            Location offset = iterator.next();
-                            Scheduler.getInstance().runChunkTask(offset, 0, () -> {
-                                Block dBlock = destination.clone().add(offset.getX(), offset.getY(), offset.getZ())
-                                        .getBlock();
+                            Location destinationPos = destination.clone().add(offset.getX(), offset.getY(),
+                                    offset.getZ());
+                            Scheduler.getInstance().runChunkTask(destinationPos, 0, () -> {
+                                Block dBlock = destinationPos.getBlock();
                                 BlockState state = dBlock.getState();
                                 blocks.incrementAndGet();
                                 if (state.getType() != Material.AIR) {
@@ -140,10 +213,10 @@ public class Paster extends Service {
                                     i.decrementAndGet();
                                 }
                             });
-                            if (blocks.get() > 4 * blockPerTickAware)
+                            if (blocks.get() > 32 * blockPerTickAware)
                                 break;
                         }
-                        if (!iterator.hasNext()) {
+                        if (y.get() < -height || y.get() + destination.getY() < minY) {
                             Scheduler.getInstance().runTask(() -> {
                                 paster.complete(null);
                             });

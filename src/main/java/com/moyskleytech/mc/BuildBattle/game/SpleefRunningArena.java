@@ -19,7 +19,9 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -52,17 +54,15 @@ public class SpleefRunningArena implements Listener {
     List<Player> players = new ArrayList<>();
     Plot playerPlot;
     Map<UUID, ItemStack[]> playersInventory = new HashMap<>();
+    Map<UUID, Integer> playersRank = new HashMap<>();
 
     boolean blockMovement = false;
     boolean preventBuildDestroy = false;
     private Player winner;
     private int countdown = 0;
-    private int voteIndex = 0;
-    private Iterator<Plot> plotsToVote;
-    private String theme;
-    private Plot current_plot;
     CompletableFuture<Void> currentAction = null;
     private boolean stopping;
+    private List<Location> spawnLoc;
 
     public String getName() {
         return arena.getName();
@@ -73,7 +73,7 @@ public class SpleefRunningArena implements Listener {
         this.world = world;
 
         setState(SpleefArenaState.LOBBY);
-
+        spawnLoc = arena.getSpawnOffsets();
         BuildBattle.getInstance().registerListener(this);
     }
 
@@ -147,6 +147,10 @@ public class SpleefRunningArena implements Listener {
     @SuppressWarnings("CallToPrintStackTrace")
     public CompletableFuture<Boolean> join(Player p) {
         if (state == SpleefArenaState.LOBBY) {
+            if(players.size()>= spawnLoc.size())
+            {
+                return CompletableFuture.completedFuture(false);
+            }
             players.add(p);
             this.playersInventory.put(p.getUniqueId(), p.getInventory().getContents());
             p.getInventory().clear();
@@ -210,7 +214,6 @@ public class SpleefRunningArena implements Listener {
             countdown = arena.getLobbyDuration();
         }
         if (state == SpleefArenaState.STARTING) {
-
             preventBuildDestroy = true;
             blockMovement = true;
             CompletableFuture<Void> unpasteLobby = Service.get(Paster.class).unpaste(world.getSpawnLocation(),
@@ -221,16 +224,22 @@ public class SpleefRunningArena implements Listener {
                 Location center = world.getSpawnLocation();
                 playerPlot = new Plot();
                 playerPlot.center = center;
-
+                AtomicInteger i = new AtomicInteger();
                 // Paste the plots
 
                 List<CompletableFuture<Boolean>> teleports = players.stream().map(
                         player -> {
-                            // Teleport players to plots
-                            player.setGameMode(GameMode.SURVIVAL);
-                            player.setAllowFlight(true);
-                            //player.setFlying(true);
-                            return player.teleportAsync(playerPlot.center);
+                            var pos = i.getAndIncrement();
+                            if (pos < spawnLoc.size()) {
+                                // Teleport players to plots
+                                player.setGameMode(GameMode.SURVIVAL);
+                                player.setAllowFlight(true);
+                                // player.setFlying(true);
+                                return player.teleportAsync(spawnLoc.get(pos).add(playerPlot.center));
+                            } else {
+                                leave(player);
+                                return CompletableFuture.completedFuture(false);
+                            }
                         }).toList();
                 currentAction = runLaterOrNow()
                         .thenAccept(
@@ -238,21 +247,22 @@ public class SpleefRunningArena implements Listener {
                                     Paster paster = Service.get(Paster.class);
                                     currentAction = runLaterOrNow().thenAccept(Void4 -> {
                                         var plot = playerPlot;
-                                        var plotPasting = paster.paste(arena.plotSchematicCenter.toBukkit(), plot.center,
-                                                    arena.plotSize + arena.contourSize,
-                                                    arena.plotSize + arena.contourSize,
-                                                    arena.plotHeight + arena.contourSize);
+                                        var plotPasting = paster.paste(arena.plotSchematicCenter.toBukkit(),
+                                                plot.center,
+                                                arena.plotSize + arena.contourSize,
+                                                arena.plotSize + arena.contourSize,
+                                                arena.plotHeight + arena.contourSize);
                                         ;
-                                        CompletableFuture<Void> pasterAll =plotPasting;
+                                        CompletableFuture<Void> pasterAll = plotPasting;
 
                                         currentAction = pasterAll.thenAccept(ignored_ -> {
-                                            setState(SpleefArenaState.BUILDING);
+                                            setState(SpleefArenaState.BATTLE);
                                         });
                                     });
                                 }));
             });
         }
-        if (state == SpleefArenaState.BUILDING) {
+        if (state == SpleefArenaState.BATTLE) {
             // Start countdown
             preventBuildDestroy = false;
             blockMovement = false;
@@ -261,12 +271,12 @@ public class SpleefRunningArena implements Listener {
             players.forEach(
                     player -> {
                         // Teleport players to plots
-                        player.setGameMode(GameMode.CREATIVE);
+                        player.setGameMode(GameMode.SURVIVAL);
                         player.setAllowFlight(false);
                         player.setFlying(false);
                     });
         }
-        
+
         if (state == SpleefArenaState.ENDING) {
             blockMovement = true;
             players.forEach(
@@ -280,10 +290,10 @@ public class SpleefRunningArena implements Listener {
             // Unpaste all plots
             currentAction = runLaterOrNow().thenAccept(Void3 -> {
                 Plot plot = playerPlot;
-                var plotPasting =  paster.unpaste(plot.center,
-                            arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
-                            arena.plotHeight + arena.contourSize);
-               
+                var plotPasting = paster.unpaste(plot.center,
+                        arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
+                        arena.plotHeight + arena.contourSize);
+
                 CompletableFuture<Void> unpasterAll = plotPasting;
 
                 currentAction = unpasterAll.thenAccept(e -> stop());
@@ -306,10 +316,6 @@ public class SpleefRunningArena implements Listener {
             players.forEach(player -> player.getInventory().setItem(4,
                     Data.getInstance().getItems().voteItems.get(6).forPlayer(player).build()));
             if (players.size() >= arena.getMinimumPlayers()) {
-                // check for amount of player above minimum to start the vote GUI
-                // players.forEach(player -> player.getInventory().clear());
-                // players.forEach(player ->
-                // player.openInventory(votingUIs.get(player.getUniqueId()).getInventory()));
                 // Once enough players have joined reduce the countdown
                 countdown--;
                 if (countdown <= 0) {
@@ -317,13 +323,6 @@ public class SpleefRunningArena implements Listener {
                 }
             }
         }
-        if (state == SpleefArenaState.BUILDING) {
-            countdown--;
-            if (countdown <= 0) {
-                setState(SpleefArenaState.ENDING);
-            }
-        }
-
     }
 
     private void setWinner(Player p) {
@@ -357,7 +356,7 @@ public class SpleefRunningArena implements Listener {
             scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbySpleefScoreboard();
         else if (state == SpleefArenaState.STARTING)
             scoreboard_lines = LanguageConfig.getInstance().scoreboard().startingSpleefScoreboard();
-        else if (state == SpleefArenaState.BUILDING)
+        else if (state == SpleefArenaState.BATTLE)
             scoreboard_lines = LanguageConfig.getInstance().scoreboard().buildingSpleefScoreboard();
 
         return processPlaceholders(scoreboard_lines, board.getPlayer());
@@ -370,10 +369,10 @@ public class SpleefRunningArena implements Listener {
                 .forEach(line -> {
                     lines.add(line.with(p)
                             .replace("%bb_version%", BuildBattle.getInstance().getVersion())
-                            .replace("%theme%", theme)
                             .replace("%state%", state.toString())
                             .replace("%countdown%", String.valueOf(countdown))
                             .replace("%winner%", winner != null ? winner.displayName() : Component.empty())
+                            .replace("%rank%", playersRank.containsKey(p.getUniqueId())? playersRank.get(p.getUniqueId()).toString(): "?" )
 
                             .replace("%minutes%", String.valueOf(minutes()))
                             .replace("%seconds%", String.valueOf(seconds()))
@@ -400,5 +399,22 @@ public class SpleefRunningArena implements Listener {
         double dz = Math.abs(block.getZ() - plot.center.getZ());
 
         return dx <= arena.plotSize && dz <= arena.plotSize && dy <= arena.plotHeight;
+    }
+    @EventHandler
+    public void playerDeath(PlayerDeathEvent death)
+    {
+        if(players.contains(death.getPlayer()))
+        {
+            Player pl= death.getPlayer();
+            pl.setGameMode(GameMode.SPECTATOR);
+            long countLiving = players.stream().filter(p->p.getGameMode()== GameMode.SURVIVAL).count();
+            playersRank.put(pl.getUniqueId(), Integer.valueOf((int)countLiving));
+
+            if(countLiving == 1)
+            {
+                setWinner(players.stream().filter(p->p.getGameMode()== GameMode.SURVIVAL).findAny().get());
+                setState(SpleefArenaState.ENDING);
+            }
+        }
     }
 }

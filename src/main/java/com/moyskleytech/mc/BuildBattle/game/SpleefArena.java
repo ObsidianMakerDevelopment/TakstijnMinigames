@@ -1,13 +1,13 @@
 package com.moyskleytech.mc.BuildBattle.game;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.WorldType;
 import org.bukkit.World.Environment;
 
-import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 
@@ -28,6 +28,7 @@ public class SpleefArena {
     public int lobbyDuration = 60;
     public int gameDuration = 180;
     public int minimumPlayers = 2;
+    public List<Location> spawnOffsets = new ArrayList<>();
 
     public SpleefRunningArena start() {
         SpleefArenas arenas = Service.get(SpleefArenas.class);

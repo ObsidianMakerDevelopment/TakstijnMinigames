@@ -123,7 +123,7 @@ public class BuildBattle extends JavaPlugin {
 
             w.setDifficulty(Difficulty.NORMAL);
             w.setSpawnFlags(true, true);
-            w.setPVP(false);
+            //w.setPVP(false);
             w.setStorm(false);
             w.setThundering(false);
             w.setWeatherDuration(Integer.MAX_VALUE);

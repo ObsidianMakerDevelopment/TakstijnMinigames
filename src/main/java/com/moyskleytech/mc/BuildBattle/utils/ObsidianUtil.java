@@ -256,6 +256,12 @@ public class ObsidianUtil {
         File value = new File(folder, "mainLobby.yml");
         return value;
     }
+    
+    public static File mainSpleefLobbyFile() {
+        File folder = BuildBattle.getPluginInstance().getDataFolder();
+        File value = new File(folder, "mainSpleefLobby.yml");
+        return value;
+    }
 
     public static @NotNull Location getMainLobby() {
         Data data = Data.getInstance();
@@ -272,6 +278,23 @@ public class ObsidianUtil {
         else
             data.save(LocationDB.fromBukkit(loc), mainLobbyFile());
     }
+
+    public static @NotNull Location getSpleefMainLobby() {
+        Data data = Data.getInstance();
+        File mainLobby = mainSpleefLobbyFile();
+        if (mainLobby.exists())
+            return data.load(LocationDB.class, mainLobby).toBukkit();
+        return Bukkit.getWorlds().get(0).getSpawnLocation();
+    }
+
+    public static void setSpleefMainLobby(Location loc) {
+        Data data = Data.getInstance();
+        if (loc == null)
+            mainSpleefLobbyFile().delete();
+        else
+            data.save(LocationDB.fromBukkit(loc), mainSpleefLobbyFile());
+    }
+
 
     public static <T> CompletableFuture<Void> future(Collection<CompletableFuture<T>> teleports) {
         if (teleports.size() == 0)

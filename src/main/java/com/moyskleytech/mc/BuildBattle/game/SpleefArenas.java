@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.swing.Action;
-
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -23,8 +21,8 @@ import com.moyskleytech.mc.BuildBattle.utils.Logger;
 
 public class SpleefArenas extends Service implements Listener {
     private List<SpleefArena> arenas;
-    private List<SpleefRunningArena> runningArenas = new ArrayList<>();
-    private Map<Player, SpleefRunningArena> arenaForPlayer = new HashMap<>();
+    private final List<SpleefRunningArena> runningArenas = new ArrayList<>();
+    private final Map<Player, SpleefRunningArena> arenaForPlayer = new HashMap<>();
     private File arenasFolder;
 
     public List<SpleefArena> getArenas() {
@@ -51,7 +49,7 @@ public class SpleefArenas extends Service implements Listener {
     public void onLoad() throws ServiceLoadException {
         BuildBattle plugin = BuildBattle.getInstance();
         File folder = plugin.getDataFolder();
-        arenasFolder = new File(folder, "arenas");
+        arenasFolder = new File(folder, "spleef_arenas");
         arenasFolder.mkdir();
 
         Data data = Service.get(Data.class);

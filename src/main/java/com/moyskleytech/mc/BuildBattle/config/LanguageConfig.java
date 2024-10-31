@@ -390,22 +390,21 @@ public class LanguageConfig extends Service {
                             "&rPlayers: %player_count%",
                             "&rStart in: %minutes%m%seconds%s",
                             "&r",
-                            "&7BBv%bb_version%"))
+                            "&7v%bb_version%"))
                     .key("startingSpleefScoreboard")
-                    .defValue(List.of("&r",
+                    .defValue(List.of(
+                            "&r",
                             "&rArena: %arena%",
-                            "&rTheme: %theme%",
                             "&rGame initializing",
                             "&r",
-                            "&7BBv%bb_version%"))
+                            "&7v%bb_version%"))
                     .key("buildingSpleefScoreboard")
                     .defValue(List.of(
                             "&r",
                             "&rArena: %arena%",
-                            "&rTheme: %theme%",
-                            "&rTime: %minutes%m%seconds%s",
+                            "&rRank: %rank%/%player_count%",
                             "&r",
-                            "&7BBv%bb_version%"))
+                            "&7v%bb_version%"))
                     .key("votingScoreboard")
                     .defValue(List.of(
                             "&r",

@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.swing.Action;
-
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -23,8 +21,8 @@ import com.moyskleytech.mc.BuildBattle.utils.Logger;
 
 public class Arenas extends Service implements Listener {
     private List<Arena> arenas;
-    private List<RunningArena> runningArenas = new ArrayList<>();
-    private Map<Player, RunningArena> arenaForPlayer = new HashMap<>();
+    private final List<RunningArena> runningArenas = new ArrayList<>();
+    private final Map<Player, RunningArena> arenaForPlayer = new HashMap<>();
     private File arenasFolder;
 
     public List<Arena> getArenas() {
