@@ -17,10 +17,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import cloud.commandframework.annotations.Argument;
-import cloud.commandframework.annotations.CommandMethod;
-import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.annotations.specifier.Greedy;
+import org.incendo.cloud.annotations.Argument;
+import org.incendo.cloud.annotations.Command;
+import org.incendo.cloud.annotations.Permission;
+import org.incendo.cloud.paper.util.sender.PlayerSource;
+
 
 public class SpleefJoinCommand extends CommandManager.Command {
 
@@ -37,39 +38,39 @@ public class SpleefJoinCommand extends CommandManager.Command {
         init = true;
     }
 
-    @CommandMethod("spleef autojoin")
-    @CommandPermission("obsidian.spleef.autojoin")
-    private void commandAutojoin(final Player player) {
+    @Command("spleef autojoin")
+    @Permission("obsidian.spleef.autojoin")
+    private void commandAutojoin(final PlayerSource player) {
         SpleefArenas arenas = Service.get(SpleefArenas.class);
-        ActionResult result = arenas.joinRandomly(player);
+        ActionResult result = arenas.joinRandomly(player.source());
         if (!result.isSuccess()) {
-            player.sendMessage(LanguageConfig.getInstance().getString(result.getErrorKey()));
+            player.source().sendMessage(LanguageConfig.getInstance().getString(result.getErrorKey()));
         }
     }
 
-    @CommandMethod("spleef leave")
-    private void commandLeave(final Player player) {
+    @Command("spleef leave")
+    private void commandLeave(final PlayerSource player) {
         SpleefArenas arenas = Service.get(SpleefArenas.class);
-        SpleefRunningArena arena = arenas.getArenaForPlayer(player);
+        SpleefRunningArena arena = arenas.getArenaForPlayer(player.source());
         if (arena == null)
-            player.sendMessage(LanguageConfig.getInstance().error().notPlaying().with(player).component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().notPlaying().with(player.source()).component());
         else
-            arena.leave(player);
+            arena.leave(player.source());
     }
 
-    @CommandMethod("spleef join <arena>")
-    @CommandPermission("obsidian.spleef.join")
-    private void commandJoin(final Player player, final @Argument(value = "arena", suggestions = "spleefarenas") String map) {
+    @Command("spleef join <arena>")
+    @Permission("obsidian.spleef.join")
+    private void commandJoin(final PlayerSource player, final @Argument(value = "arena", suggestions = "spleefarenas") String map) {
         SpleefArenas arenas = Service.get(SpleefArenas.class);
-        arenas.join(player, map);
+        arenas.join(player.source(), map);
     }
 
-    @CommandMethod("spleef joinnew <arena>")
-    @CommandPermission("obsidian.spleef.joinnew")
-    private void commandJoinNew(final Player player,
+    @Command("spleef joinnew <arena>")
+    @Permission("obsidian.spleef.joinnew")
+    private void commandJoinNew(final PlayerSource player,
             final @Argument(value = "arena", suggestions = "spleefarenas") String map) {
         SpleefArenas arenas = Service.get(SpleefArenas.class);
-        arenas.join(player, map, false);
+        arenas.join(player.source(), map, false);
     }
 
 }

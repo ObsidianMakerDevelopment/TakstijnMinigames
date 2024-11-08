@@ -10,6 +10,7 @@ import org.bukkit.World.Environment;
 
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.WorldPool;
+import com.moyskleytech.obsidian.material.ObsidianItemTemplate;
 
 import lombok.Getter;
 
@@ -28,7 +29,8 @@ public class SpleefArena {
     public int lobbyDuration = 60;
     public int gameDuration = 180;
     public int minimumPlayers = 2;
-    public List<Location> spawnOffsets = new ArrayList<>();
+    public ObsidianItemTemplate tool = null;
+    public List<LocationDB> spawnOffsets = new ArrayList<>();
 
     public SpleefRunningArena start() {
         SpleefArenas arenas = Service.get(SpleefArenas.class);

@@ -15,10 +15,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import cloud.commandframework.annotations.Argument;
-import cloud.commandframework.annotations.CommandMethod;
-import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.annotations.specifier.Greedy;
+import org.incendo.cloud.annotations.Argument;
+import org.incendo.cloud.annotations.Command;
+import org.incendo.cloud.annotations.Permission;
+
 
 public class ForceCommand extends CommandManager.Command {
 
@@ -34,8 +34,8 @@ public class ForceCommand extends CommandManager.Command {
         init = true;
     }
 
-    @CommandMethod("bb force start")
-    @CommandPermission("obsidian.bb.force.start")
+    @Command("bb force start")
+    @Permission("obsidian.bb.force.start")
     private void commandAutojoin(final  Player player) {
         Arenas arenas = Service.get(Arenas.class);
         RunningArena arena= arenas.getArenaForPlayer(player);

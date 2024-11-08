@@ -1,42 +1,27 @@
 package com.moyskleytech.mc.BuildBattle.commands;
 
-import cloud.commandframework.CommandTree;
-import cloud.commandframework.annotations.AnnotationParser;
-import cloud.commandframework.annotations.Argument;
-import cloud.commandframework.annotations.CommandDescription;
-import cloud.commandframework.annotations.CommandMethod;
-import cloud.commandframework.annotations.specifier.Greedy;
-import cloud.commandframework.arguments.parser.ArgumentParseResult;
-import cloud.commandframework.arguments.parser.ArgumentParser;
-import cloud.commandframework.arguments.parser.ParserParameters;
-import cloud.commandframework.arguments.parser.StandardParameters;
-import cloud.commandframework.bukkit.CloudBukkitCapabilities;
-import cloud.commandframework.context.CommandContext;
-import cloud.commandframework.execution.CommandExecutionCoordinator;
-import cloud.commandframework.meta.CommandMeta;
-import cloud.commandframework.minecraft.extras.MinecraftHelp;
-import cloud.commandframework.paper.PaperCommandManager;
+import org.incendo.cloud.annotations.AnnotationParser;
+import org.incendo.cloud.parser.ParserParameters;
+import org.incendo.cloud.meta.CommandMeta;
 import lombok.Getter;
-import lombok.NonNull;
-
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
-import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.game.SpleefArenas;
-
+import org.incendo.cloud.paper.PaperCommandManager;
+import org.incendo.cloud.paper.util.sender.PaperSimpleSenderMapper;
+import org.incendo.cloud.paper.util.sender.Source;
+import org.incendo.cloud.bukkit.CloudBukkitCapabilities;
+import org.incendo.cloud.execution.ExecutionCoordinator;
+import org.incendo.cloud.suggestion.Suggestion;
 @Getter
 public class CommandManager extends Service {
 
@@ -48,14 +33,14 @@ public class CommandManager extends Service {
         return Service.get(CommandManager.class);
     }
 
-    public PaperCommandManager<CommandSender> getManager() {
+    public PaperCommandManager<Source> getManager() {
         return manager;
     }
 
     private List<Command> commands;
-    private PaperCommandManager<CommandSender> manager;
-    private AnnotationParser<CommandSender> annotationParser;
-    private MinecraftHelp<CommandSender> minecraftHelp;
+    private PaperCommandManager<Source> manager;
+
+    private AnnotationParser<Source> annotationParser;
 
     public CommandManager() {
         super();
@@ -101,50 +86,47 @@ public class CommandManager extends Service {
         JavaPlugin plugin = BuildBattle.getInstance();
         if (manager != null)
             return;
-        final Function<CommandTree<CommandSender>, CommandExecutionCoordinator<CommandSender>> executionCoordinatorFunction = CommandExecutionCoordinator
-                .simpleCoordinator();
-        final Function<CommandSender, CommandSender> mapperFunction = Function.identity();
+
         try {
-            this.manager = new PaperCommandManager<>(
-                    plugin,
-                    executionCoordinatorFunction,
-                    mapperFunction,
-                    mapperFunction);
+            this.manager = PaperCommandManager.builder(PaperSimpleSenderMapper.simpleSenderMapper())
+                    .executionCoordinator(ExecutionCoordinator.simpleCoordinator())
+                    .buildOnEnable(plugin);
         } catch (final Throwable e) {
             Bukkit.getLogger().severe("Failed to initialize the command manager");
             throw new ServiceLoadException(e);
         }
 
-        if (manager.queryCapability(CloudBukkitCapabilities.BRIGADIER)) {
+        if (manager.hasCapability(CloudBukkitCapabilities.NATIVE_BRIGADIER)) {
             try {
-                manager.registerBrigadier();
+                // manager.registerBrigadier();
             } catch (Throwable e) {
                 Logger.error("Could not register Brigadier :: \r{}", e.getCause().getCause());
             }
         }
 
-        if (manager.queryCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
-            manager.registerAsynchronousCompletions();
+        if (manager.hasCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
+
         }
-        final Function<ParserParameters, CommandMeta> commandMetaFunction = p -> CommandMeta.simple()
-                .with(CommandMeta.DESCRIPTION, p.get(StandardParameters.DESCRIPTION, "No description"))
+        final Function<ParserParameters, CommandMeta> commandMetaFunction = p -> CommandMeta.builder()
+                // .with(CloudKey., p.get(StandardParameters.DESCRIPTION, "No description"))
                 .build();
 
-        annotationParser = new AnnotationParser<>(
+        annotationParser = new AnnotationParser<Source>(
                 manager,
-                CommandSender.class,
+                Source.class,
                 commandMetaFunction);
         annotationParser.parse(this);
 
         Arenas arenas = Service.get(Arenas.class);
-        CommandManager.getInstance().getManager().getParserRegistry().registerSuggestionProvider("arenas",
+        manager.parserRegistry().registerSuggestionProvider("arenas",
+        
                 (commandSenderCommandContext, s) -> {
-                    return arenas.names();
+                    return CompletableFuture.completedFuture(arenas.names().stream().map(name-> Suggestion.suggestion(name)).toList());
                 });
         SpleefArenas spleefArenas = Service.get(SpleefArenas.class);
-        CommandManager.getInstance().getManager().getParserRegistry().registerSuggestionProvider("spleefarenas",
+        manager.parserRegistry().registerSuggestionProvider("spleefarenas",
                 (commandSenderCommandContext, s) -> {
-                    return spleefArenas.names();
+                    return CompletableFuture.completedFuture(spleefArenas.names().stream().map(name-> Suggestion.suggestion(name)).toList());
                 });
         commands.forEach(arg0 -> {
             try {

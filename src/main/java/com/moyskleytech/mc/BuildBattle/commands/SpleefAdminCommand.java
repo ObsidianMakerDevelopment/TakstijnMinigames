@@ -11,6 +11,7 @@ import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 import com.moyskleytech.mc.BuildBattle.utils.Logger.Level;
+import com.moyskleytech.obsidian.material.ObsidianItemTemplate;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,12 +22,12 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import cloud.commandframework.annotations.Argument;
-import cloud.commandframework.annotations.CommandMethod;
-import cloud.commandframework.annotations.CommandPermission;
-import cloud.commandframework.annotations.specifier.Greedy;
-import cloud.commandframework.annotations.specifier.Range;
+import org.incendo.cloud.annotation.specifier.Range;
+import org.incendo.cloud.annotations.Argument;
+import org.incendo.cloud.annotations.Command;
+import org.incendo.cloud.annotations.Permission;
+import org.incendo.cloud.paper.util.sender.PlayerSource;
+import org.incendo.cloud.paper.util.sender.Source;
 
 public class SpleefAdminCommand extends CommandManager.Command {
 
@@ -43,223 +44,256 @@ public class SpleefAdminCommand extends CommandManager.Command {
         CommandManager.getInstance().getAnnotationParser().parse(this);
     }
 
-    @CommandMethod("spleef admin createarena <arena>")
-    @CommandPermission("obsidian.spleef.admin.create")
-    private void commandCreate(final Player player,
+    @Command("spleef admin createarena <arena>")
+    @Permission("obsidian.spleef.admin.create")
+    private void commandCreate(final PlayerSource player,
             final @Argument(value = "arena", suggestions = "spleefarenas") String map) {
         SpleefArena arena = new SpleefArena();
         arena.id = UUID.randomUUID();
         arena.name = map;
-        editMap.put(player.getUniqueId(), arena);
-        player.sendMessage(LanguageConfig.getInstance().editor().nowInEdition(map).component());
+        editMap.put(player.source().getUniqueId(), arena);
+        player.source().sendMessage(LanguageConfig.getInstance().editor().nowInEdition(map).component());
     }
 
-    @CommandMethod("spleef admin edit arena <arena>")
-    @CommandPermission("obsidian.bb.admin.edit")
-    private void commandEdit(final Player player, final @Argument(value = "arena", suggestions = "spleefarenas") String map) {
+    @Command("spleef admin edit arena <arena>")
+    @Permission("obsidian.bb.admin.edit")
+    private void commandEdit(final PlayerSource player,
+            final @Argument(value = "arena", suggestions = "spleefarenas") String map) {
         SpleefArenas arenas = Service.get(SpleefArenas.class);
         SpleefArena arena = arenas.byName(map);
-        editMap.put(player.getUniqueId(), arena);
+        editMap.put(player.source().getUniqueId(), arena);
         if (arena != null)
-            player.sendMessage(LanguageConfig.getInstance().editor().nowInEdition(map).component());
+            player.source().sendMessage(LanguageConfig.getInstance().editor().nowInEdition(map).component());
         else
-            player.sendMessage(LanguageConfig.getInstance().error().nonExistingMap(map).component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nonExistingMap(map).component());
     }
 
-    @CommandMethod("spleef admin setmainlobby")
-    @CommandPermission("obsidian.spleef.admin.lobby")
-    private void commandSetMainLobby(final Player player) {
-        ObsidianUtil.setSpleefMainLobby(player.getLocation());
-        player.sendMessage(LanguageConfig.getInstance().editor().changed("<Plugin>","Lobby").component());
+    @Command("spleef admin setmainlobby")
+    @Permission("obsidian.spleef.admin.lobby")
+    private void commandSetMainLobby(final PlayerSource player) {
+        ObsidianUtil.setSpleefMainLobby(player.source().getLocation());
+        player.source().sendMessage(LanguageConfig.getInstance().editor().changed("<Plugin>", "Lobby").component());
     }
 
-    @CommandMethod("spleef admin removelobby")
-    @CommandPermission("obsidian.spleef.admin.lobby")
-    private void commandRemoveMainLobby(final CommandSender player) {
+    @Command("spleef admin removelobby")
+    @Permission("obsidian.spleef.admin.lobby")
+    private void commandRemoveMainLobby(final Source player) {
         ObsidianUtil.setSpleefMainLobby(null);
-        player.sendMessage(LanguageConfig.getInstance().editor().changed("<Plugin>","Lobby").component());
+        player.source().sendMessage(LanguageConfig.getInstance().editor().changed("<Plugin>", "Lobby").component());
     }
 
-    @CommandMethod("spleef admin save")
-    @CommandPermission("obsidian.spleef.admin.save")
-    private void commandSave(final Player player) {
+    @Command("spleef admin save")
+    @Permission("obsidian.spleef.admin.save")
+    private void commandSave(final PlayerSource player) {
         SpleefArenas arenas = Service.get(SpleefArenas.class);
-        SpleefArena wip = editMap.get(player.getUniqueId());
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         if (wip.getPlotSchematicCenter() == null) {
-            player.sendMessage(LanguageConfig.getInstance().editor().arenaHasNoSchematic(wip.getName()).component());
+            player.source()
+                    .sendMessage(LanguageConfig.getInstance().editor().arenaHasNoSchematic(wip.getName()).component());
             return;
         }
         if (wip.getLobbyCenter() == null) {
-            player.sendMessage(LanguageConfig.getInstance().editor().arenaHasNoLobby(wip.getName()).component());
+            player.source()
+                    .sendMessage(LanguageConfig.getInstance().editor().arenaHasNoLobby(wip.getName()).component());
             return;
         }
         arenas.save(wip);
-        player.sendMessage(LanguageConfig.getInstance().editor().saved(wip.name).component());
+        player.source().sendMessage(LanguageConfig.getInstance().editor().saved(wip.name).component());
     }
 
-    @CommandMethod("spleef admin debug")
-    @CommandPermission("obsidian.spleef.admin.debug")
-    private void commandDebug(final CommandSender player) {
-       Logger.setMode(Level.ALL);
-       player.sendMessage("[Testing]Now in debug mode");
+    @Command("spleef admin debug")
+    @Permission("obsidian.spleef.admin.debug")
+    private void commandDebug(final Source player) {
+        Logger.setMode(Level.ALL);
+        player.source().sendMessage("[Testing]Now in debug mode");
 
     }
 
-    @CommandMethod("spleef admin set lobby")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void commandSetLobby(final Player player) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin set lobby")
+    @Permission("obsidian.spleef.admin.edit")
+    private void commandSetLobby(final PlayerSource player) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
-        wip.lobbyCenter = LocationDB.fromBukkit(player.getLocation());
-        player.sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "lobby").component());
+        wip.lobbyCenter = LocationDB.fromBukkit(player.source().getLocation());
+        player.source().sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "lobby").component());
     }
 
-    @CommandMethod("spleef admin set schematic")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void commandSetSchematic(final Player player) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin set schematic")
+    @Permission("obsidian.spleef.admin.edit")
+    private void commandSetSchematic(final PlayerSource player) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
-        wip.plotSchematicCenter = LocationDB.fromBukkit(player.getLocation());
-        player.sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "schematic").component());
+        wip.plotSchematicCenter = LocationDB.fromBukkit(player.source().getLocation());
+        wip.spawnOffsets.clear();
+        player.source()
+                .sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "schematic").component());
+    }
+    @Command("spleef admin add spawn")
+    @Permission("obsidian.spleef.admin.edit")
+    private void commandAdd(final PlayerSource player) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
+        if (wip == null) {
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            return;
+        }
+        wip.spawnOffsets.add(LocationDB.fromBukkit(player.source().getLocation().subtract(wip.plotSchematicCenter.toBukkit())));
+        player.source()
+                .sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "schematic").component());
+    }
+
+    @Command("spleef admin set tool")
+    @Permission("obsidian.spleef.admin.edit")
+    private void commandAdd(final PlayerSource player) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
+        if (wip == null) {
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            return;
+        }
+        wip.tool = new ObsidianItemTemplate(player.source().getInventory().getItemInMainHand());
+        player.source()
+                .sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "tool").component());
     }
 
 
-    @CommandMethod("spleef admin teleport lobby")
-    @CommandPermission("obsidian.spleef.admin.teleport")
-    private void commandTeleportLobby(final Player player) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin teleport lobby")
+    @Permission("obsidian.spleef.admin.teleport")
+    private void commandTeleportLobby(final PlayerSource player) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         if (wip.getLobbyCenter() == null) {
-            player.sendMessage(LanguageConfig.getInstance().editor().arenaHasNoLobby(wip.getName()).component());
+            player.source()
+                    .sendMessage(LanguageConfig.getInstance().editor().arenaHasNoLobby(wip.getName()).component());
             return;
         }
-        player.teleportAsync(wip.getLobbyCenter().toBukkit()).thenAccept(Void -> player
+        player.source().teleportAsync(wip.getLobbyCenter().toBukkit()).thenAccept(Void -> player.source()
                 .sendMessage(LanguageConfig.getInstance().editor().teleportedLobby(wip.getName()).component()));
     }
 
-    @CommandMethod("spleef admin teleport schematic")
-    @CommandPermission("obsidian.spleef.admin.teleport")
-    private void commandTeleportPlot(final Player player) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin teleport schematic")
+    @Permission("obsidian.spleef.admin.teleport")
+    private void commandTeleportPlot(final PlayerSource player) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         if (wip.getPlotSchematicCenter() == null) {
-            player.sendMessage(LanguageConfig.getInstance().editor().arenaHasNoSchematic(wip.getName()).component());
+            player.source()
+                    .sendMessage(LanguageConfig.getInstance().editor().arenaHasNoSchematic(wip.getName()).component());
             return;
         }
-        player.teleportAsync(wip.getPlotSchematicCenter().toBukkit()).thenAccept(Void -> player
+        player.source().teleportAsync(wip.getPlotSchematicCenter().toBukkit()).thenAccept(Void -> player.source()
                 .sendMessage(LanguageConfig.getInstance().editor().teleportedSchematic(wip.getName()).component()));
     }
 
-    @CommandMethod("spleef admin rename arena <new_arena_name>")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void commandRename(final Player player, final @Argument(value = "new_arena_name") String map) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin rename arena <new_arena_name>")
+    @Permission("obsidian.spleef.admin.edit")
+    private void commandRename(final PlayerSource player, final @Argument(value = "new_arena_name") String map) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         String oldName = wip.getName();
         wip.name = map;
-        player.sendMessage(LanguageConfig.getInstance().editor().renamed(oldName,map).component());
+        player.source().sendMessage(LanguageConfig.getInstance().editor().renamed(oldName, map).component());
     }
 
-    @CommandMethod("spleef admin set plotSize <plot_size>")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void commandPlotSize(final Player player, final @Argument(value = "plot_size") @Range(min="1", max="100") int value) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin set schematicSize <plotHeight>")
+    @Permission("obsidian.spleef.admin.edit")
+    private void commandPlotSizet(final PlayerSource player,
+            final @Argument(value = "plotSize") @Range(min = "1", max = "300") int value) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         wip.plotSize = value;
-        player.sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "plotSize").component());
+        player.source()
+                .sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "plotSize").component());
     }
 
-    @CommandMethod("spleef admin set plotHeight <plotHeight>")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void commandPlotHeight(final Player player, final @Argument(value = "plotHeight") @Range(min="1", max="300") int value) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+
+    @Command("spleef admin set schematicHeight <plotHeight>")
+    @Permission("obsidian.spleef.admin.edit")
+    private void commandPlotHeight(final PlayerSource player,
+            final @Argument(value = "plotHeight") @Range(min = "1", max = "300") int value) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         wip.plotHeight = value;
-        player.sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "plotHeight").component());
+        player.source()
+                .sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "plotHeight").component());
     }
 
-    @CommandMethod("spleef admin set contourSize <contourSize>")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void command_contourSize(final Player player, final @Argument(value = "contourSize") @Range(min="1", max="300") int value) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin set lobbySize <lobbySize>")
+    @Permission("obsidian.spleef.admin.edit")
+    private void command_lobbySize(final PlayerSource player,
+            final @Argument(value = "lobbySize") @Range(min = "1", max = "300") int value) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
-            return;
-        }
-        wip.contourSize = value;
-        player.sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "contourSize").component());
-    }
-
-    @CommandMethod("spleef admin set lobbySize <lobbySize>")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void command_lobbySize(final Player player, final @Argument(value = "lobbySize") @Range(min="1", max="300") int value) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
-        if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         wip.lobbySize = value;
-        player.sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "lobbySize").component());
+        player.source()
+                .sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "lobbySize").component());
     }
 
-    @CommandMethod("spleef admin set lobbyHeight <lobbyHeight>")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void command_lobbyHeight(final Player player, final @Argument(value = "lobbyHeight") @Range(min="1", max="300") int value) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin set lobbyHeight <lobbyHeight>")
+    @Permission("obsidian.spleef.admin.edit")
+    private void command_lobbyHeight(final PlayerSource player,
+            final @Argument(value = "lobbyHeight") @Range(min = "1", max = "300") int value) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         wip.lobbyHeight = value;
-        player.sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "lobbyHeight").component());
+        player.source()
+                .sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "lobbyHeight").component());
     }
 
-    @CommandMethod("spleef admin set duration lobby <lobbyDuration>")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void command_lobbyDuration(final Player player, final @Argument(value = "lobbyDuration") @Range(min="1", max="3600") int value) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin set duration lobby <lobbyDuration>")
+    @Permission("obsidian.spleef.admin.edit")
+    private void command_lobbyDuration(final PlayerSource player,
+            final @Argument(value = "lobbyDuration") @Range(min = "1", max = "3600") int value) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         wip.lobbyDuration = value;
-        player.sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "lobbyDuration").component());
+        player.source()
+                .sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "lobbyDuration").component());
     }
 
-    @CommandMethod("spleef admin set minimumPlayers <minimumPlayers>")
-    @CommandPermission("obsidian.spleef.admin.edit")
-    private void command_minimumPlayers(final Player player, final @Argument(value = "minimumPlayers") @Range(min="2", max="100") int value) {
-        SpleefArena wip = editMap.get(player.getUniqueId());
+    @Command("spleef admin set minimumPlayers <minimumPlayers>")
+    @Permission("obsidian.spleef.admin.edit")
+    private void command_minimumPlayers(final PlayerSource player,
+            final @Argument(value = "minimumPlayers") @Range(min = "2", max = "100") int value) {
+        SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
-            player.sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
+            player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
             return;
         }
         wip.minimumPlayers = value;
-        player.sendMessage(LanguageConfig.getInstance().editor().changed(wip.getName(), "minimumPlayers").component());
+        player.source().sendMessage(
+                LanguageConfig.getInstance().editor().changed(wip.getName(), "minimumPlayers").component());
     }
 }

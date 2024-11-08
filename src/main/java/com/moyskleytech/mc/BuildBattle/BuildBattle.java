@@ -20,6 +20,7 @@ import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 import com.moyskleytech.mc.BuildBattle.utils.Scheduler;
+import com.moyskleytech.mc.BuildBattle.utils.VillagerTrade;
 import com.moyskleytech.mc.BuildBattle.utils.Logger.Level;
 
 import lombok.Getter;
@@ -39,6 +40,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.WorldInfo;
+import org.bukkit.inventory.Recipe;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -237,6 +239,11 @@ public class BuildBattle extends JavaPlugin {
         Logger.trace("API has been registered!");
 
         Logger.setMode(Level.WARNING);
+
+        for(VillagerTrade r: ObsidianUtil.getAllVillagersRecipes())
+        {
+            Logger.info("Recipe {} {}", r.getClass(), r.toString());
+        }
     }
 
     public void registerListener(Listener listener) {

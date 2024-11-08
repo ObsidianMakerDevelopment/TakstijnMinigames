@@ -1,6 +1,7 @@
 package com.moyskleytech.mc.BuildBattle.scoreboard.scoreboardr.board;
 //https://raw.githubusercontent.com/RienBijl/Scoreboard-revision/master/src/main/java/rien/bijl/Scoreboard/r/Board/BoardPlayer.java
 import org.bukkit.entity.Player;
+import org.incendo.cloud.paper.util.sender.PlayerSource;
 
 import java.util.Collection;
 import java.util.HashMap;

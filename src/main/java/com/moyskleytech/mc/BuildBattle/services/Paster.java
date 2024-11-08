@@ -57,13 +57,13 @@ public class Paster extends Service {
         AtomicInteger z = new AtomicInteger(-depth);
 
         CompletableFuture<Void> paster = new CompletableFuture<>();
-        int blockPerTick = ObsidianConfig.getInstance().paster().blockPerTick();
+        int blockPerTick = 600;//ObsidianConfig.getInstance().paster().blockPerTick();
         boolean tickAware = ObsidianConfig.getInstance().paster().tickAware();
-        Task task = Scheduler.getInstance().runTaskTimerAsync(
+        Task task = Scheduler.getInstance().runTaskTimer(
                 new Consumer<Scheduler.Task>() {
                     public Vector getNext() {
                         Vector toReturn = new Vector(x.get(), y.get(), z.get());
-                        if (y.get() < -height)
+                        if (y.get() > height)
                             return null;
                         if (z.incrementAndGet() > depth) {
                             z.set(-depth);
@@ -79,7 +79,7 @@ public class Paster extends Service {
                                         int percent = 100 * (y.get() + height) / range;
                                         maybePlayerForSending.sendActionBar(
                                                 ObsidianUtil
-                                                        .component("Pasting Y=" + y.get()+destination.getY() + " | " + percent + "%"));
+                                                        .component("Pasting Y=" + (int)(y.get()+destination.getY()) + " | " + percent + "%"));
                                     }
                                 }
                                 if (y.incrementAndGet() > height) {
@@ -120,7 +120,7 @@ public class Paster extends Service {
                                     });
                                 }
                             });
-                            if (blocks.get() > 16 * blockPerTickAware)
+                            if (blocks.get() > 4 * blockPerTickAware)
                                 break;
                         }
                         if (y.get() > height) {
@@ -154,9 +154,9 @@ public class Paster extends Service {
             y.decrementAndGet();
         }
         CompletableFuture<Void> paster = new CompletableFuture<>();
-        int blockPerTick = 10000;//ObsidianConfig.getInstance().paster().blockPerTick();
+        int blockPerTick = 600;//ObsidianConfig.getInstance().paster().blockPerTick();
         boolean tickAware = ObsidianConfig.getInstance().paster().tickAware();
-        Task task = Scheduler.getInstance().runTaskTimerAsync(
+        Task task = Scheduler.getInstance().runTaskTimer(
                 new Consumer<Scheduler.Task>() {
                     public Vector getNext() {
                         Vector toReturn = new Vector(x.get(), y.get(), z.get());
@@ -176,7 +176,7 @@ public class Paster extends Service {
                                         int percent = 100 * (height-y.get() ) / range;
                                         maybePlayerForSending.sendActionBar(
                                                 ObsidianUtil
-                                                        .component("Pasting Y=" + y.get()+destination.getY() + " | " + percent + "%"));
+                                                        .component("Pasting Y=" + (int)(y.get()+destination.getY()) + " | " + percent + "%"));
                                     }
                                 }
                                 if (y.decrementAndGet() < -height) {
@@ -213,7 +213,7 @@ public class Paster extends Service {
                                     i.decrementAndGet();
                                 }
                             });
-                            if (blocks.get() > 32 * blockPerTickAware)
+                            if (blocks.get() > 4 * blockPerTickAware)
                                 break;
                         }
                         if (y.get() < -height || y.get() + destination.getY() < minY) {

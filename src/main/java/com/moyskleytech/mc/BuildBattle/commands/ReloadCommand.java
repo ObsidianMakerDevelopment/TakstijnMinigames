@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 
-import cloud.commandframework.annotations.CommandMethod;
-import cloud.commandframework.annotations.CommandPermission;
+import org.incendo.cloud.annotations.Command;
+import org.incendo.cloud.annotations.Permission;
 
 public class ReloadCommand extends CommandManager.Command {
 
@@ -25,8 +25,8 @@ public class ReloadCommand extends CommandManager.Command {
         init = true;
     }
 
-    @CommandMethod("bb reload")
-    @CommandPermission("obsidian.bb.admin")
+    @Command("bb reload")
+    @Permission("obsidian.bb.admin")
     private void commandReload(final @NotNull Player player) {
         BuildBattle.getInstance().reload();
     }

@@ -6,6 +6,7 @@ package com.moyskleytech.mc.BuildBattle.scoreboard.data;
 
 import com.moyskleytech.mc.BuildBattle.scoreboard.Scoreboard;
 import org.bukkit.entity.Player;
+import org.incendo.cloud.paper.util.sender.PlayerSource;
 
 public class PlaceholderData
 {
@@ -13,8 +14,8 @@ public class PlaceholderData
     private final Scoreboard holder;
     private final String line;
     
-    public PlaceholderData(final Player player, final Scoreboard holder, final String line) {
-        this.player = player;
+    public PlaceholderData(final PlayerSource player, final Scoreboard holder, final String line) {
+        this.player = player.source();
         this.holder = holder;
         this.line = line;
     }

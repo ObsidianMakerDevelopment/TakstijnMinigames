@@ -1,7 +1,7 @@
 plugins {
     java
     `maven-publish`
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.gradleup.shadow") version "8.3.4"
     id("com.github.gmazzo.buildconfig") version "3.1.0"
 }
 
@@ -35,14 +35,15 @@ repositories {
     maven("https://nexus.iridiumdevelopment.net/repository/maven-releases/")
     maven("https://papermc.io/repo/repository/maven-public/")
     maven("https://repo.purpurmc.org/snapshots")
+    maven("https://oss.sonatype.org/content/repositories/snapshots/")
 }
 
 dependencies {
     // Dependencies that we want to shade in
     implementation("com.iridium:IridiumColorAPI:1.0.6")
-    implementation("cloud.commandframework:cloud-minecraft-extras:" + properties["CLOUD_COMMANDS_VERSION"])
-    implementation("cloud.commandframework:cloud-paper:" + properties["CLOUD_COMMANDS_VERSION"])
-    implementation("cloud.commandframework:cloud-annotations:" + properties["CLOUD_COMMANDS_VERSION"])
+    implementation("org.incendo:cloud-core:2.1.0-SNAPSHOT" )
+    implementation("org.incendo:cloud-annotations:2.1.0-SNAPSHOT")
+    implementation("org.incendo:cloud-paper:2.0.0-SNAPSHOT")
     implementation("org.spongepowered:configurate-core:" + properties["CONFIGURATE_VERSION"])
     implementation("org.spongepowered:configurate-yaml:" + properties["CONFIGURATE_VERSION"])
     implementation("com.moyskleytech:ObsidianMaterialAPI:1.0.2")
@@ -55,12 +56,12 @@ dependencies {
 
     // Other dependencies that are not required or already available at runtime
     //compileOnly("org.purpurmc.purpur:purpur-api:1.19.3-R0.1-SNAPSHOT")
-    compileOnly("dev.folia:folia-api:1.20.2-R0.1-SNAPSHOT")
+    compileOnly("org.purpurmc.purpur:purpur-api:1.21-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.6")
-    compileOnly("org.projectlombok:lombok:1.18.22")
+    compileOnly("org.projectlombok:lombok:1.18.30")
 
     // Enable lombok annotation processing
-    annotationProcessor("org.projectlombok:lombok:1.18.22")
+    annotationProcessor("org.projectlombok:lombok:1.18.30")
 }
 
 tasks {
@@ -76,7 +77,7 @@ tasks {
         // Relocate dependencies
         relocate("org.spongepowered.configurate", "com.moyskleytech.mc.lib.configurate")
         relocate("org.yaml.snakeyaml", "com.moyskleytech.mc.lib.snakeyaml")
-        relocate("cloud.commandframework", "com.moyskleytech.mc.lib.cloud")
+        relocate("org.incendo.cloud", "com.moyskleytech.mc.lib.cloud")
         relocate("me.lucko.commodore", "com.moyskleytech.mc.lib.commodore")
         relocate("com.iridium.iridiumcolorapi", "com.moyskleytech.mc.lib.iridiumcolorapi")
         
@@ -102,13 +103,13 @@ tasks {
     }
 
     compileJava {
-        sourceCompatibility = JavaVersion.VERSION_17.toString()
-        targetCompatibility = JavaVersion.VERSION_17.toString()
+        sourceCompatibility = JavaVersion.VERSION_21.toString()
+        targetCompatibility = JavaVersion.VERSION_21.toString()
     }
 
     compileTestJava {
-        sourceCompatibility = JavaVersion.VERSION_17.toString()
-        targetCompatibility = JavaVersion.VERSION_17.toString()
+        sourceCompatibility = JavaVersion.VERSION_21.toString()
+        targetCompatibility = JavaVersion.VERSION_21.toString()
     }
 }
 
@@ -120,7 +121,7 @@ java {
 }
 tasks.withType<JavaCompile>().configureEach {
     javaCompiler.set(javaToolchains.compilerFor {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     })
 }
 

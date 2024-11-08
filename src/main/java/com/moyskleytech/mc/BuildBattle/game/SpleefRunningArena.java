@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +63,7 @@ public class SpleefRunningArena implements Listener {
     private int countdown = 0;
     CompletableFuture<Void> currentAction = null;
     private boolean stopping;
-    private List<Location> spawnLoc;
+    private List<LocationDB> spawnLoc;
 
     public String getName() {
         return arena.getName();
@@ -235,7 +236,9 @@ public class SpleefRunningArena implements Listener {
                                 player.setGameMode(GameMode.SURVIVAL);
                                 player.setAllowFlight(true);
                                 // player.setFlying(true);
-                                return player.teleportAsync(spawnLoc.get(pos).add(playerPlot.center));
+                                player.getInventory().setItem(EquipmentSlot.HAND, arena.tool.build());
+
+                                return player.teleportAsync(spawnLoc.get(pos).toBukkit().add(playerPlot.center));
                             } else {
                                 leave(player);
                                 return CompletableFuture.completedFuture(false);
@@ -413,6 +416,11 @@ public class SpleefRunningArena implements Listener {
             if(countLiving == 1)
             {
                 setWinner(players.stream().filter(p->p.getGameMode()== GameMode.SURVIVAL).findAny().get());
+                setState(SpleefArenaState.ENDING);
+            }
+            if(countLiving == 0)
+            {
+                setWinner(death.getPlayer());
                 setState(SpleefArenaState.ENDING);
             }
         }

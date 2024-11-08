@@ -191,6 +191,11 @@ public abstract class Scheduler {
         @Override
         public Task runChunkTask(Location e, long delay, Runnable r) {
             if (delay <= 0) {
+                if(Bukkit.isPrimaryThread())
+                {
+                    r.run();
+                    return null;
+                }
                 return new NormalTask(Bukkit.getScheduler().runTask(BuildBattle.getInstance(), r));
             }
             return this.runTaskLater(r, delay);
