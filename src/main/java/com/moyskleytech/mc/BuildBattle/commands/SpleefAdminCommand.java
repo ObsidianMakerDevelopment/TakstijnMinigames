@@ -153,7 +153,8 @@ public class SpleefAdminCommand extends CommandManager.Command {
 
     @Command("spleef admin set tool")
     @Permission("obsidian.spleef.admin.edit")
-    private void commandAdd(final PlayerSource player) {
+    private void commandTool(final PlayerSource player) {
+
         SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {
             player.source().sendMessage(LanguageConfig.getInstance().error().nothingToSave().component());
