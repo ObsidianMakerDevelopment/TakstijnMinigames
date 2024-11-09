@@ -360,6 +360,7 @@ public class LanguageConfig extends Service {
         public static ConfigSection build(ConfigSection section) throws SerializationException {
             return section.section("scoreboard")
                     .key("animatedTitle").defValue(List.of("&eBuildBattle", "&aBuildBattle"))
+                    .key("animatedSpleefTitle").defValue(List.of("&eSpleef", "&aSpleef"))
                     .key("lobbyScoreboard")
                     .defValue(List.of(
                             "&r",
@@ -428,6 +429,10 @@ public class LanguageConfig extends Service {
 
         public List<LanguagePlaceholder> animatedTitle() {
             return getStringList("scoreboard.animatedTitle").stream().map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+        public List<LanguagePlaceholder> animatedSpleefTitle() {
+            return getStringList("scoreboard.animatedSpleefTitle").stream().map(line -> LanguagePlaceholder.of(line))
                     .toList();
         }
 

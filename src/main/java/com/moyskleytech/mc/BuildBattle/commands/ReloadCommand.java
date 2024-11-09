@@ -7,6 +7,7 @@ import com.moyskleytech.mc.BuildBattle.BuildBattle;
 
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.Permission;
+import org.incendo.cloud.paper.util.sender.ConsoleSource;
 
 public class ReloadCommand extends CommandManager.Command {
 
@@ -27,7 +28,7 @@ public class ReloadCommand extends CommandManager.Command {
 
     @Command("bb reload")
     @Permission("obsidian.bb.admin")
-    private void commandReload(final @NotNull Player player) {
+    private void commandReload(final @NotNull ConsoleSource player) {
         BuildBattle.getInstance().reload();
     }
 

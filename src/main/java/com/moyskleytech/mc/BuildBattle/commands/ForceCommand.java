@@ -18,7 +18,7 @@ import org.bukkit.entity.Player;
 import org.incendo.cloud.annotations.Argument;
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.Permission;
-
+import org.incendo.cloud.paper.util.sender.PlayerSource;
 
 public class ForceCommand extends CommandManager.Command {
 
@@ -29,6 +29,7 @@ public class ForceCommand extends CommandManager.Command {
         onPostEnabled();
         super.onLoad();
     }
+
     public void onPostEnabled() {
         CommandManager.getInstance().getAnnotationParser().parse(this);
         init = true;
@@ -36,12 +37,11 @@ public class ForceCommand extends CommandManager.Command {
 
     @Command("bb force start")
     @Permission("obsidian.bb.force.start")
-    private void commandAutojoin(final  Player player) {
+    private void commandAutojoin(final PlayerSource player) {
         Arenas arenas = Service.get(Arenas.class);
-        RunningArena arena= arenas.getArenaForPlayer(player);
-        if(arena ==null)
-        {
-            player.sendMessage(LanguageConfig.getInstance().error().notPlaying().with(player).component());
+        RunningArena arena = arenas.getArenaForPlayer(player.source());
+        if (arena == null) {
+            player.source().sendMessage(LanguageConfig.getInstance().error().notPlaying().with(player.source()).component());
         }
     }
 }

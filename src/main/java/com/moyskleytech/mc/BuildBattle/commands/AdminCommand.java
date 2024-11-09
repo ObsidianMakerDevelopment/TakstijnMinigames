@@ -23,6 +23,7 @@ import org.incendo.cloud.annotation.specifier.Range;
 import org.incendo.cloud.annotations.Argument;
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.Permission;
+import org.incendo.cloud.paper.util.sender.ConsoleSource;
 import org.incendo.cloud.paper.util.sender.PlayerSource;
 
 public class AdminCommand extends CommandManager.Command {
@@ -72,9 +73,9 @@ public class AdminCommand extends CommandManager.Command {
 
     @Command("bb admin removelobby")
     @Permission("obsidian.bb.admin.lobby")
-    private void commandRemoveMainLobby(final CommandSender player) {
+    private void commandRemoveMainLobby(final ConsoleSource player) {
         ObsidianUtil.setMainLobby(null);
-        player.sendMessage(LanguageConfig.getInstance().editor().changed("<Plugin>","Lobby").component());
+        player.source().sendMessage(LanguageConfig.getInstance().editor().changed("<Plugin>","Lobby").component());
     }
 
     @Command("bb admin save")
@@ -100,9 +101,9 @@ public class AdminCommand extends CommandManager.Command {
 
     @Command("bb admin debug")
     @Permission("obsidian.bb.admin.debug")
-    private void commandDebug(final CommandSender player) {
+    private void commandDebug(final ConsoleSource player) {
        Logger.setMode(Level.ALL);
-       player.sendMessage("[Testing]Now in debug mode");
+       player.source().sendMessage("[Testing]Now in debug mode");
 
     }
 

@@ -8,4 +8,5 @@ depend: [  ]
 softdepend:
   - "PlaceholderAPI"
   - "Citizens"
+  - "ObsidianMaterial"
 folia-supported: true

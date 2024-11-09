@@ -1,8 +1,8 @@
 package com.moyskleytech.mc.BuildBattle.services;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.moyskleytech.obsidian.material.dependencies.fasterxml.core.JsonParser;
+import com.moyskleytech.obsidian.material.dependencies.fasterxml.databind.ObjectMapper;
+import com.moyskleytech.obsidian.material.dependencies.fasterxml.dataformat.yaml.YAMLFactory;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.VotingItems;
 import com.moyskleytech.mc.BuildBattle.service.Service;

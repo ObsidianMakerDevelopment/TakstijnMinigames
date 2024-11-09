@@ -213,9 +213,9 @@ public class SpleefAdminCommand extends CommandManager.Command {
         player.source().sendMessage(LanguageConfig.getInstance().editor().renamed(oldName, map).component());
     }
 
-    @Command("spleef admin set schematicSize <plotHeight>")
+    @Command("spleef admin set schematicSize <plotSize>")
     @Permission("obsidian.spleef.admin.edit")
-    private void commandPlotSizet(final PlayerSource player,
+    private void commandPlotSize(final PlayerSource player,
             final @Argument(value = "plotSize") @Range(min = "1", max = "300") int value) {
         SpleefArena wip = editMap.get(player.source().getUniqueId());
         if (wip == null) {

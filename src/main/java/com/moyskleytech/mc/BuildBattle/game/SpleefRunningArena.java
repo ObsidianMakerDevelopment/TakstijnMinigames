@@ -339,7 +339,7 @@ public class SpleefRunningArena implements Listener {
 
         final var title = LanguageConfig
                 .getInstance()
-                .scoreboard().animatedTitle();
+                .scoreboard().animatedSpleefTitle();
 
         Scoreboard.builder()
                 .player(player)
