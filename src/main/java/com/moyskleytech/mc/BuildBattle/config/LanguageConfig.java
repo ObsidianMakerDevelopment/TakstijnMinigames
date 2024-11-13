@@ -20,6 +20,7 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ConfigGenerator.ConfigSection;
 import com.moyskleytech.mc.BuildBattle.game.ArenaState;
+import com.moyskleytech.mc.BuildBattle.game.PillarArenaState;
 import com.moyskleytech.mc.BuildBattle.game.Plot;
 import com.moyskleytech.mc.BuildBattle.game.SpleefArenaState;
 import com.moyskleytech.mc.BuildBattle.placeholderapi.Placeholders;
@@ -202,6 +203,15 @@ public class LanguageConfig extends Service {
                 s.back();
             }
             spleefgamestate.back();
+
+            ConfigSection pillargamestate = section.section("pillargamestate");
+            for (PillarArenaState state : PillarArenaState.values()) {
+                ConfigSection s = gamestate.section(state.name());
+                s.key("-2").defValue("-1 for when the arena switch, othewise value of the timer when it sends");
+                s.back();
+            }
+            pillargamestate.back();
+
             ErrorMessages.build(section);
             EditorMessages.build(section);
             ScoreboardConfig.build(section);
@@ -223,6 +233,13 @@ public class LanguageConfig extends Service {
 
     public LanguagePlaceholder forSpleefGameState(SpleefArenaState name, int cooldown) {
         String maybeMessage = getString("spleefgamestate." + name.name() + "." + cooldown, null);
+        if (maybeMessage != null)
+            return LanguagePlaceholder.of(ChatColor.translateAlternateColorCodes('&', maybeMessage));
+        return null;
+    }
+
+    public LanguagePlaceholder forPillarGameState(PillarArenaState name, int cooldown) {
+        String maybeMessage = getString("pillargamestate." + name.name() + "." + cooldown, null);
         if (maybeMessage != null)
             return LanguagePlaceholder.of(ChatColor.translateAlternateColorCodes('&', maybeMessage));
         return null;
@@ -361,6 +378,7 @@ public class LanguageConfig extends Service {
             return section.section("scoreboard")
                     .key("animatedTitle").defValue(List.of("&eBuildBattle", "&aBuildBattle"))
                     .key("animatedSpleefTitle").defValue(List.of("&eSpleef", "&aSpleef"))
+                    .key("animatedPillarTitle").defValue(List.of("&ePillars", "&aPillars"))
                     .key("lobbyScoreboard")
                     .defValue(List.of(
                             "&r",
@@ -406,6 +424,27 @@ public class LanguageConfig extends Service {
                             "&rRank: %rank%/%player_count%",
                             "&r",
                             "&7v%bb_version%"))
+
+                    .key("lobbyPillarScoreboard")
+                    .defValue(List.of(
+                            "&r",
+                            "&rPlayers: %player_count%",
+                            "&rStart in: %minutes%m%seconds%s",
+                            "&r",
+                            "&7v%bb_version%"))
+                    .key("startingPillarScoreboard")
+                    .defValue(List.of(
+                            "&r",
+                            "&rGame initializing",
+                            "&r",
+                            "&7v%bb_version%"))
+                    .key("buildingPillarScoreboard")
+                    .defValue(List.of(
+                            "&r",
+                            "&rRank: %rank%/%player_count%",
+                            "&r",
+                            "&7v%bb_version%"))
+
                     .key("votingScoreboard")
                     .defValue(List.of(
                             "&r",
@@ -431,8 +470,13 @@ public class LanguageConfig extends Service {
             return getStringList("scoreboard.animatedTitle").stream().map(line -> LanguagePlaceholder.of(line))
                     .toList();
         }
+
         public List<LanguagePlaceholder> animatedSpleefTitle() {
             return getStringList("scoreboard.animatedSpleefTitle").stream().map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+        public List<LanguagePlaceholder> animatedPillarTitle() {
+            return getStringList("scoreboard.animatedPillarTitle").stream().map(line -> LanguagePlaceholder.of(line))
                     .toList();
         }
 
@@ -443,6 +487,10 @@ public class LanguageConfig extends Service {
 
         public List<LanguagePlaceholder> lobbySpleefScoreboard() {
             return getStringList("scoreboard.lobbySpleefScoreboard").stream().map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+        public List<LanguagePlaceholder> lobbyPillarScoreboard() {
+            return getStringList("scoreboard.lobbyPillarScoreboard").stream().map(line -> LanguagePlaceholder.of(line))
                     .toList();
         }
 
@@ -457,6 +505,13 @@ public class LanguageConfig extends Service {
                     .toList();
         }
 
+        public List<LanguagePlaceholder> startingPillarScoreboard() {
+            return getStringList("scoreboard.startingPillarScoreboard").stream()
+                    .map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+
+
         public List<LanguagePlaceholder> buildingScoreboard() {
             return getStringList("scoreboard.buildingScoreboard").stream().map(line -> LanguagePlaceholder.of(line))
                     .toList();
@@ -467,6 +522,13 @@ public class LanguageConfig extends Service {
                     .map(line -> LanguagePlaceholder.of(line))
                     .toList();
         }
+
+        public List<LanguagePlaceholder> buildingPillarScoreboard() {
+            return getStringList("scoreboard.buildingPillarScoreboard").stream()
+                    .map(line -> LanguagePlaceholder.of(line))
+                    .toList();
+        }
+
 
         public List<LanguagePlaceholder> votingScoreboard() {
             return getStringList("scoreboard.votingScoreboard").stream().map(line -> LanguagePlaceholder.of(line))
