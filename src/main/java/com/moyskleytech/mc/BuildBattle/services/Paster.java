@@ -57,7 +57,7 @@ public class Paster extends Service {
         AtomicInteger z = new AtomicInteger(-depth);
 
         CompletableFuture<Void> paster = new CompletableFuture<>();
-        int blockPerTick = 600;//ObsidianConfig.getInstance().paster().blockPerTick();
+        int blockPerTick = 600;// ObsidianConfig.getInstance().paster().blockPerTick();
         boolean tickAware = ObsidianConfig.getInstance().paster().tickAware();
         Task task = Scheduler.getInstance().runTaskTimer(
                 new Consumer<Scheduler.Task>() {
@@ -79,7 +79,8 @@ public class Paster extends Service {
                                         int percent = 100 * (y.get() + height) / range;
                                         maybePlayerForSending.sendActionBar(
                                                 ObsidianUtil
-                                                        .component("Pasting Y=" + (int)(y.get()+destination.getY()) + " | " + percent + "%"));
+                                                        .component("Pasting Y=" + (int) (y.get() + destination.getY())
+                                                                + " | " + percent + "%"));
                                     }
                                 }
                                 if (y.incrementAndGet() > height) {
@@ -154,7 +155,7 @@ public class Paster extends Service {
             y.decrementAndGet();
         }
         CompletableFuture<Void> paster = new CompletableFuture<>();
-        int blockPerTick = 600;//ObsidianConfig.getInstance().paster().blockPerTick();
+        int blockPerTick = 600;// ObsidianConfig.getInstance().paster().blockPerTick();
         boolean tickAware = ObsidianConfig.getInstance().paster().tickAware();
         Task task = Scheduler.getInstance().runTaskTimer(
                 new Consumer<Scheduler.Task>() {
@@ -173,7 +174,104 @@ public class Paster extends Service {
                                     }
                                     if (isConnected) {
                                         int range = height * 2;
-                                        int percent = 100 * (height-y.get() ) / range;
+                                        int percent = 100 * (height - y.get()) / range;
+                                        maybePlayerForSending.sendActionBar(
+                                                ObsidianUtil
+                                                        .component("Pasting Y=" + (int) (y.get() + destination.getY())
+                                                                + " | " + percent + "%"));
+                                    }
+                                }
+                                if (y.decrementAndGet() < -height) {
+
+                                }
+                            }
+                        }
+
+                        return toReturn;
+                    }
+
+                    @Override
+                    public void accept(Task task) {
+                        int blockPerTickAware = blockPerTick;
+                        if (tickAware) {
+                            blockPerTickAware = (int) Math.ceil((Bukkit.getTPS()[0] / 20.0) * blockPerTick);
+                        }
+                        AtomicInteger blocks = new AtomicInteger();
+                        for (AtomicInteger i = new AtomicInteger(); i.get() < blockPerTickAware; i.incrementAndGet()) {
+
+                            Vector offset = getNext();
+                            if (offset == null)
+                                break;
+                            Location destinationPos = destination.clone().add(offset.getX(), offset.getY(),
+                                    offset.getZ());
+                            Scheduler.getInstance().runChunkTask(destinationPos, 0, () -> {
+                                Block dBlock = destinationPos.getBlock();
+                                BlockState state = dBlock.getState();
+                                blocks.incrementAndGet();
+                                if (state.getType() != Material.AIR) {
+                                    state.setType(Material.AIR);
+                                    state.update(true, false);
+                                } else {
+                                    i.decrementAndGet();
+                                }
+                            });
+                            if (blocks.get() > 4 * blockPerTickAware)
+                                break;
+                        }
+                        if (y.get() < -height || y.get() + destination.getY() < minY) {
+                            Scheduler.getInstance().runTask(() -> {
+                                paster.complete(null);
+                            });
+                        }
+                    }
+                }, 1, 1);
+        tasks.add(task);
+        return paster.thenAccept(e -> tasks.remove(task));
+    }
+
+    public CompletableFuture<Void> unpaste(Location pos1, Location pos2,
+            CommandSender maybePlayerForSending) {
+        List<Vector> offsets = new LinkedList<>();
+
+        Location destination = new Location(pos1.getWorld(), (pos1.getX() + pos2.getX()) / 2,
+                (pos1.getY() + pos2.getY()) / 2, (pos1.getZ() + pos2.getZ()) / 2);
+
+        int width = (int)Math.abs(pos1.getX()-pos2.getX());
+        int height = (int)Math.abs(pos1.getY()-pos2.getY());
+        int depth = (int)Math.abs(pos1.getZ()-pos2.getZ());
+
+        AtomicInteger x = new AtomicInteger(-width);
+        AtomicInteger y = new AtomicInteger(height);
+        AtomicInteger z = new AtomicInteger(-depth);
+
+        int minY = destination.getWorld().getMinHeight();
+        int maxY = destination.getWorld().getMaxHeight();
+
+        while (y.get() + destination.getY() > maxY) {
+            y.decrementAndGet(); 
+        }
+        CompletableFuture<Void> paster = new CompletableFuture<>();
+        int blockPerTick = 600;//ObsidianConfig.getInstance().paster().blockPerTick();
+        boolean tickAware = ObsidianConfig.getInstance().paster().tickAware();
+        Task task = Scheduler.getInstance().runTaskTimer(
+                new Consumer<Scheduler.Task>() {
+                    public Vector getNext() {
+                        Vector toReturn = new Vector(x.get(), y.get(), z.get());
+                        if (y.get() < -height)
+                            return null;
+                        if (z.incrementAndGet() > depth) {
+                            z.set(-depth);
+                            if (x.incrementAndGet() > width) {
+                                x.set(-width);
+                                if (maybePlayerForSending != null) {
+                                    boolean isConnected = true;
+                                    if (maybePlayerForSending instanceof Player p) {
+                                        isConnected = p.isConnected();
+                                    }  
+                                    if (isConnected) {
+                                        int range = height * 2;
+                                        int percent = 100 * (height-y.get() ) / range;   
+                                                                
                                         maybePlayerForSending.sendActionBar(
                                                 ObsidianUtil
                                                         .component("Pasting Y=" + (int)(y.get()+destination.getY()) + " | " + percent + "%"));

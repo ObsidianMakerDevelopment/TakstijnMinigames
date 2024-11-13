@@ -16,9 +16,12 @@ import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.util.Vector;
 import org.bukkit.World;
+import org.bukkit.WorldBorder;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -43,6 +46,8 @@ import com.moyskleytech.mc.BuildBattle.ui.VotingUI;
 import com.moyskleytech.mc.BuildBattle.utils.Logger;
 import com.moyskleytech.mc.BuildBattle.utils.ObsidianUtil;
 import com.moyskleytech.mc.BuildBattle.utils.Scheduler;
+import com.moyskleytech.obsidian.material.ObsidianItemTemplate;
+import com.moyskleytech.obsidian.material.ObsidianMaterial;
 
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -64,7 +69,13 @@ public class PillarRunningArena implements Listener {
     private int countdown = 0;
     CompletableFuture<Void> currentAction = null;
     private boolean stopping;
-    private List<Vector> spawnLoc;
+    private List<Location> spawnLoc = new ArrayList<>();
+
+    Location pos1, pos2, center;
+    double borderSize = 0;
+    WorldBorder worldBorder;
+    int secondsTillNextItem = 0;
+    private List<ObsidianItemTemplate> possibleBlocks = new ArrayList<>();
 
     public String getName() {
         return arena.getName();
@@ -73,6 +84,15 @@ public class PillarRunningArena implements Listener {
     public PillarRunningArena(PillarArena arena, World world) {
         this.arena = arena;
         this.world = world;
+        this.secondsTillNextItem = arena.getTimeBetweenItems();
+
+        // create the list of possible blocks
+        for (Material m : Material.values()) {
+            if (m.isBlock() && !m.isInteractable() && !m.isAir()) {
+                possibleBlocks.add(new ObsidianItemTemplate(ObsidianMaterial.wrap(m)));
+            }
+            possibleBlocks.addAll(arena.getAdditionnalItems());
+        }
 
         setState(PillarArenaState.LOBBY);
         BuildBattle.getInstance().registerListener(this);
@@ -123,9 +143,8 @@ public class PillarRunningArena implements Listener {
                 Plot plot = playerPlot;
                 Logger.trace("Unpasting arena's plot");
 
-                CompletableFuture<Void> unpastePlot = Service.get(Paster.class).unpaste(plot.center,
-                        arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
-                        arena.plotHeight + arena.contourSize);
+                // unpaste according to created size
+                CompletableFuture<Void> unpastePlot = Service.get(Paster.class).unpaste(pos1, pos2, null);
 
                 currentAction = runLaterOrNow().thenAccept(Void4 -> {
                     unpastePlot.thenAccept(Void2 -> {
@@ -216,26 +235,62 @@ public class PillarRunningArena implements Listener {
 
             // Paste Arena
 
-            Location center = world.getSpawnLocation();
-            playerPlot = new Plot();
-            playerPlot.center = center;
-            AtomicInteger i = new AtomicInteger();
-            // Paste the plots
-
             currentAction = runLaterOrNow()
                     .thenAccept(
-                            Void3 -> currentAction = ObsidianUtil.future(teleports).thenAccept(ignored_teleport -> {
+                            Void3 -> {
                                 Paster paster = Service.get(Paster.class);
 
                                 // TODO: Create pillars and set pos1/pos2 of arena for unpasting later
 
+                                double wx = world.getSpawnLocation().getBlockX();
+                                double wy = world.getSpawnLocation().getBlockY();
+                                double wz = world.getSpawnLocation().getBlockZ();
+
+                                double sq = Math.ceil(Math.sqrt(players.size()));
+                                for (int s = 0, i = 0, z = 0; i < sq; i++) {
+                                    if (s == sq) {
+                                        s = 0;
+                                        z++;
+                                    }
+
+                                    spawnLoc.add(new Location(world, wx + 50 + s * arena.getDistance(), wy,
+                                            wz + arena.getDistance() * z));
+                                }
+                                for (Location l : spawnLoc) {
+                                    int y = l.getBlockY();
+                                    while (y > world.getMinHeight()) {
+                                        Block b = world.getBlockAt(l.getBlockX(), y, l.getBlockZ());
+                                        BlockState bstate = b.getState();
+                                        bstate.setType(Material.BEDROCK);
+                                        bstate.update(true, false);
+                                    }
+                                }
+
+                                pos1 = new Location(world, wx + 50 - arena.getDistance(), wy, wz - arena.getDistance());
+                                pos2 = new Location(world, wx + 50 + (sq + 1) * arena.getDistance(), wy,
+                                        wz + arena.getDistance() * (sq + 1));
+
+                                center = pos1.add(pos2).multiply(0.5);
+
+                                worldBorder = Bukkit.getServer().createWorldBorder();
+                                worldBorder.setDamageAmount(0);
+                                worldBorder.setDamageBuffer(0);
+                                worldBorder.setCenter(center);
+                                worldBorder.setSize((sq / 2 + 2) * arena.getDistance());
+
+                                AtomicInteger ai = new AtomicInteger();
                                 List<CompletableFuture<Boolean>> teleports = players.stream().map(
                                         player -> {
-                                            var pos = i.getAndIncrement();
+                                            var pos = ai.getAndIncrement();
                                             if (pos < spawnLoc.size()) {
                                                 // Teleport players to plots
                                                 player.setGameMode(GameMode.SURVIVAL);
                                                 player.setAllowFlight(true);
+
+                                                player.setWorldBorder(worldBorder);
+
+                                                // player.setWorldBorder(Bukkit.getServer().createWorldBorder().;
+
                                                 // player.setFlying(true);
                                                 player.teleportAsync(playerPlot.center.add(spawnLoc.get(pos)));
                                                 return CompletableFuture.completedFuture(true);
@@ -249,7 +304,7 @@ public class PillarRunningArena implements Listener {
                                 currentAction = runLaterOrNow().thenAccept(Void4 -> {
                                     setState(PillarArenaState.BATTLE);
                                 });
-                            }));
+                            });
         }
         if (state == PillarArenaState.BATTLE) {
             // Start countdown
@@ -278,14 +333,15 @@ public class PillarRunningArena implements Listener {
             Paster paster = Service.get(Paster.class);
             // Unpaste all plots
             currentAction = runLaterOrNow().thenAccept(Void3 -> {
-                Plot plot = playerPlot;
-                var plotPasting = paster.unpaste(plot.center,
-                        arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
-                        arena.plotHeight + arena.contourSize);
+                // Plot plot = playerPlot;
 
-                CompletableFuture<Void> unpasterAll = plotPasting;
+                // var plotPasting = paster.unpaste(plot.center,
+                // arena.plotSize + arena.contourSize, arena.plotSize + arena.contourSize,
+                // arena.plotHeight + arena.contourSize);
 
-                currentAction = unpasterAll.thenAccept(e -> stop());
+                // CompletableFuture<Void> unpasterAll = plotPasting;
+
+                stop();
             });
         }
         LanguagePlaceholder lp = LanguageConfig.getInstance().forPillarGameState(state, -1);
@@ -309,6 +365,23 @@ public class PillarRunningArena implements Listener {
                 countdown--;
                 if (countdown <= 0) {
                     setState(PillarArenaState.STARTING);
+                }
+            }
+        }
+        if (state == PillarArenaState.BATTLE) {
+            for (Player player : players)
+                player.setWorldBorder(worldBorder);
+
+            secondsTillNextItem--;
+            if (secondsTillNextItem <= 0) {
+                secondsTillNextItem = arena.getTimeBetweenItems();
+
+                // give a random item to the player
+                Collections.shuffle(possibleBlocks);
+                int index = 0;
+                for (Player player : players) {
+                    if (player.getGameMode() == GameMode.SURVIVAL)
+                        player.getInventory().addItem(possibleBlocks.get(index++).build());
                 }
             }
         }
@@ -383,21 +456,14 @@ public class PillarRunningArena implements Listener {
         return countdown / 60;
     }
 
-    public boolean belongToPlot(@NotNull Block block) {
-        Plot plot = playerPlot;
-
-        double dx = Math.abs(block.getX() - plot.center.getX());
-        double dy = Math.abs(block.getY() - plot.center.getY());
-        double dz = Math.abs(block.getZ() - plot.center.getZ());
-
-        return dx <= arena.plotSize && dz <= arena.plotSize && dy <= arena.plotHeight;
-    }
-
     @EventHandler
     public void playerDeath(PlayerDeathEvent death) {
         if (players.contains(death.getPlayer())) {
             Player pl = death.getPlayer();
-            pl.setGameMode(GameMode.SPECTATOR);
+            pl.setGameMode(GameMode.ADVENTURE);
+            pl.getInventory().clear();
+            pl.teleport(pl.getWorld().getSpawnLocation());
+
             long countLiving = players.stream().filter(p -> p.getGameMode() == GameMode.SURVIVAL).count();
             playersRank.put(pl.getUniqueId(), Integer.valueOf((int) countLiving));
 

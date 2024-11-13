@@ -26,6 +26,8 @@ public class PillarArena {
     public int lobbyDuration = 60;
     public int gameDuration = 180;
     public int minimumPlayers = 2;
+    public int distance = 10;
+    public int timeBetweenItems = 2;
     public List<ObsidianItemTemplate> additionnalItems = new ArrayList<>();
 
     public PillarRunningArena start() {
