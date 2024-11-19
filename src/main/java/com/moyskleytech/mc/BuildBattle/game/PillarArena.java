@@ -15,7 +15,7 @@ import com.moyskleytech.obsidian.material.ObsidianItemTemplate;
 import lombok.Getter;
 
 @Getter
-public class PillarArena {
+public class PillarArena extends BaseArena {
     public UUID id;
     public Environment type = Environment.NORMAL;
     public String name = "arena";

@@ -26,6 +26,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerAnimationType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -54,21 +55,14 @@ import net.kyori.adventure.text.Component;
 
 @SuppressWarnings("unchecked")
 @Getter
-public class PillarRunningArena implements Listener {
-    World world;
+public class PillarRunningArena extends BaseRunningArena implements Listener {
     PillarArena arena;
     PillarArenaState state = PillarArenaState.NONE;
-    List<Player> players = new ArrayList<>();
     Plot playerPlot;
     Map<UUID, ItemStack[]> playersInventory = new HashMap<>();
     Map<UUID, Integer> playersRank = new HashMap<>();
 
-    boolean blockMovement = false;
-    boolean preventBuildDestroy = false;
-    private Player winner;
     private int countdown = 0;
-    CompletableFuture<Void> currentAction = null;
-    private boolean stopping;
     private List<Location> spawnLoc = new ArrayList<>();
 
     Location pos1, pos2, center;
@@ -81,14 +75,20 @@ public class PillarRunningArena implements Listener {
         return arena.getName();
     }
 
+    @Override
+    public boolean belongToPlot(Block b) {
+        return true;
+    }
+
     public PillarRunningArena(PillarArena arena, World world) {
+        super(arena, world);
         this.arena = arena;
         this.world = world;
         this.secondsTillNextItem = arena.getTimeBetweenItems();
 
         // create the list of possible blocks
         for (Material m : Material.values()) {
-            if (m.isBlock() && !m.isInteractable() && !m.isAir()) {
+            if (m.isItem() && m.isBlock() && !m.isInteractable() && !m.isAir()) {
                 possibleBlocks.add(new ObsidianItemTemplate(ObsidianMaterial.wrap(m)));
             }
             possibleBlocks.addAll(arena.getAdditionnalItems());
@@ -131,7 +131,38 @@ public class PillarRunningArena implements Listener {
     }
 
     public void stop() {
+        super.stop();
         stopping = true;
+
+        // WinnerMessageConfig cfg = LanguageConfig.getInstance().winnerMessage();
+        // {
+        // for (Player p : players) {
+        // var header = processPlaceholders(cfg.header(), p);
+        // List<LanguagePlaceholder> center = new ArrayList<>();
+        // for (int i = 0; i < cfg.numberPlayerShown(); i++) {
+        // int ij = i;
+        // try {
+        // Player pl = Bukkit.getPlayer(playersRank.entrySet().stream()
+        // .filter(x -> x.getValue().intValue() == ij).findAny().get().getKey());
+        // center.add(
+        // cfg.row().replace("%name%", pl.displayName())
+        // .replace("%position%", String.valueOf(i + 1))
+        // .replace("%score%", String.valueOf(i + 1)));
+        // } catch (Throwable t) {
+
+        // }
+        // }
+        // center = processPlaceholders(center, p);
+        // var footer = processPlaceholders(cfg.header(), p);
+        // List<LanguagePlaceholder> wholeMsaage = new ArrayList<>();
+        // wholeMsaage.addAll(header);
+        // wholeMsaage.addAll(center);
+        // wholeMsaage.addAll(footer);
+        // for (var lp : wholeMsaage)
+        // p.sendMessage(lp.component());
+        // }
+        // }
+
         BuildBattle.getInstance().unregisterListener(this);
         new ArrayList<>(players).forEach(this::leave);
         PillarArenas arenas = Service.get(PillarArenas.class);
@@ -175,9 +206,12 @@ public class PillarRunningArena implements Listener {
 
             // teleport to lobby
             return p.teleportAsync(world.getSpawnLocation()).thenApply(teleport -> {
-                p.setGameMode(GameMode.ADVENTURE);
-                p.setAllowFlight(true);
-                p.setFlying(true);
+                Scheduler.getInstance().runEntityTask(p, 0, () -> {
+                    p.setRespawnLocation(world.getSpawnLocation());
+                    p.setGameMode(GameMode.ADVENTURE);
+                    p.setAllowFlight(true);
+                    p.setFlying(true);
+                });
 
                 try {
                     LanguagePlaceholder lp = LanguageConfig.getInstance().forPillarGameState(PillarArenaState.LOBBY,
@@ -217,7 +251,9 @@ public class PillarRunningArena implements Listener {
         p.getInventory().clear();
         p.getInventory().setContents(this.playersInventory.get(p.getUniqueId()));
         // this.playersInventory.put(p.getUniqueId(), p.getInventory().getContents());
-        p.teleport(ObsidianUtil.getMainLobby());
+        p.teleport(ObsidianUtil.getPillarMainLobby());
+        p.setRespawnLocation(ObsidianUtil.getPillarMainLobby());
+
     }
 
     private void setState(PillarArenaState state) {
@@ -247,7 +283,7 @@ public class PillarRunningArena implements Listener {
                                 double wz = world.getSpawnLocation().getBlockZ();
 
                                 double sq = Math.ceil(Math.sqrt(players.size()));
-                                for (int s = 0, i = 0, z = 0; i < sq; i++) {
+                                for (int s = 0, i = 0, z = 0; i < sq * sq; i++) {
                                     if (s == sq) {
                                         s = 0;
                                         z++;
@@ -255,14 +291,16 @@ public class PillarRunningArena implements Listener {
 
                                     spawnLoc.add(new Location(world, wx + 50 + s * arena.getDistance(), wy,
                                             wz + arena.getDistance() * z));
+                                    s++;
                                 }
                                 for (Location l : spawnLoc) {
-                                    int y = l.getBlockY();
-                                    while (y > world.getMinHeight()) {
+                                    int y = l.getBlockY() - 2;
+                                    while (y > 0) {
                                         Block b = world.getBlockAt(l.getBlockX(), y, l.getBlockZ());
                                         BlockState bstate = b.getState();
                                         bstate.setType(Material.BEDROCK);
                                         bstate.update(true, false);
+                                        y--;
                                     }
                                 }
 
@@ -282,26 +320,13 @@ public class PillarRunningArena implements Listener {
                                 List<CompletableFuture<Boolean>> teleports = players.stream().map(
                                         player -> {
                                             var pos = ai.getAndIncrement();
-                                            if (pos < spawnLoc.size()) {
-                                                // Teleport players to plots
-                                                player.setGameMode(GameMode.SURVIVAL);
-                                                player.setAllowFlight(true);
+                                            // Teleport players to plots
 
-                                                player.setWorldBorder(worldBorder);
+                                            return player.teleportAsync(spawnLoc.get(pos));
 
-                                                // player.setWorldBorder(Bukkit.getServer().createWorldBorder().;
-
-                                                // player.setFlying(true);
-                                                player.teleportAsync(playerPlot.center.add(spawnLoc.get(pos)));
-                                                return CompletableFuture.completedFuture(true);
-
-                                            } else {
-                                                leave(player);
-                                                return CompletableFuture.completedFuture(false);
-                                            }
                                         }).toList();
 
-                                currentAction = runLaterOrNow().thenAccept(Void4 -> {
+                                ObsidianUtil.future(teleports).thenAccept(Void4 -> {
                                     setState(PillarArenaState.BATTLE);
                                 });
                             });
@@ -318,6 +343,8 @@ public class PillarRunningArena implements Listener {
                         player.setGameMode(GameMode.SURVIVAL);
                         player.setAllowFlight(false);
                         player.setFlying(false);
+
+                        player.setWorldBorder(worldBorder);
                     });
         }
 
@@ -458,23 +485,24 @@ public class PillarRunningArena implements Listener {
 
     @EventHandler
     public void playerDeath(PlayerDeathEvent death) {
-        if (players.contains(death.getPlayer())) {
-            Player pl = death.getPlayer();
-            pl.setGameMode(GameMode.ADVENTURE);
-            pl.getInventory().clear();
-            pl.teleport(pl.getWorld().getSpawnLocation());
+        if (getState() == PillarArenaState.BATTLE)
+            if (players.contains(death.getPlayer())) {
+                Player pl = death.getPlayer();
+                pl.setGameMode(GameMode.ADVENTURE);
+                pl.getInventory().clear();
+                pl.teleport(pl.getWorld().getSpawnLocation());
 
-            long countLiving = players.stream().filter(p -> p.getGameMode() == GameMode.SURVIVAL).count();
-            playersRank.put(pl.getUniqueId(), Integer.valueOf((int) countLiving));
+                long countLiving = players.stream().filter(p -> p.getGameMode() == GameMode.SURVIVAL).count();
+                playersRank.put(pl.getUniqueId(), Integer.valueOf((int) countLiving));
 
-            if (countLiving == 1) {
-                setWinner(players.stream().filter(p -> p.getGameMode() == GameMode.SURVIVAL).findAny().get());
-                setState(PillarArenaState.ENDING);
+                if (countLiving == 1) {
+                    setWinner(players.stream().filter(p -> p.getGameMode() == GameMode.SURVIVAL).findAny().get());
+                    setState(PillarArenaState.ENDING);
+                }
+                if (countLiving == 0) {
+                    setWinner(death.getPlayer());
+                    setState(PillarArenaState.ENDING);
+                }
             }
-            if (countLiving == 0) {
-                setWinner(death.getPlayer());
-                setState(PillarArenaState.ENDING);
-            }
-        }
     }
 }

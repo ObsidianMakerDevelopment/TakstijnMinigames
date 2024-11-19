@@ -36,11 +36,14 @@ public class PillarArenas extends Service implements Listener {
     }
 
     public void addRunning(PillarRunningArena arena) {
+        Service.get(BaseArenas.class).addRunning(arena);
         Logger.trace("Arenas::addRunning({})", arena);
         runningArenas.add(arena);
     }
 
     public void removeRunning(PillarRunningArena arena) {
+        Service.get(BaseArenas.class).removeRunning(arena);
+       
         Logger.trace("Arenas::removeRunning({})", arena);
         runningArenas.remove(arena);
     }

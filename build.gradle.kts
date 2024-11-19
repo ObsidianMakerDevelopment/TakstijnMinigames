@@ -77,7 +77,7 @@ tasks {
         
 
         // Remove unnecessary files from the jar
-        minimize()
+        //minimize()
     }
 
     // Set UTF-8 as the encoding

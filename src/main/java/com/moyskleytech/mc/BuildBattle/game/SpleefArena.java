@@ -15,12 +15,11 @@ import com.moyskleytech.obsidian.material.ObsidianItemTemplate;
 import lombok.Getter;
 
 @Getter
-public class SpleefArena {
+public class SpleefArena extends BaseArena {
     public UUID id;
     public Environment type = Environment.NORMAL;
     public int plotSize = 20;
     public int plotHeight = 40;
-    public String name = "arena";
     public int contourSize = 5;
     public LocationDB plotSchematicCenter;
     public LocationDB lobbyCenter;

@@ -36,11 +36,15 @@ public class SpleefArenas extends Service implements Listener {
     }
 
     public void addRunning(SpleefRunningArena arena) {
+        Service.get(BaseArenas.class).addRunning(arena);
+
         Logger.trace("Arenas::addRunning({})", arena);
         runningArenas.add(arena);
     }
 
     public void removeRunning(SpleefRunningArena arena) {
+        Service.get(BaseArenas.class).removeRunning(arena);
+
         Logger.trace("Arenas::removeRunning({})", arena);
         runningArenas.remove(arena);
     }

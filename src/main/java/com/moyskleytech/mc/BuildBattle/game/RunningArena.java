@@ -45,35 +45,23 @@ import net.kyori.adventure.text.Component;
 
 @SuppressWarnings("unchecked")
 @Getter
-public class RunningArena implements Listener {
-    World world;
+public class RunningArena extends BaseRunningArena implements Listener {
     Arena arena;
     ArenaState state = ArenaState.NONE;
-    List<Player> players = new ArrayList<>();
     Map<UUID, Plot> plots = new HashMap<>();
     Map<UUID, VotingUI> votingUIs = new HashMap<>();
     List<AtomicInteger> voting = new ArrayList<>();
     List<String> themes = new ArrayList<>();
-    Map<UUID, ItemStack[]> playersInventory = new HashMap<>();
-
-    boolean blockMovement = false;
-    boolean preventBuildDestroy = false;
-    private Player winner;
+  
     private int countdown = 0;
     private int voteIndex = 0;
     private Iterator<Plot> plotsToVote;
     private String theme;
     private Plot current_plot;
-    CompletableFuture<Void> currentAction = null;
-    private boolean stopping;
-
-    public String getName() {
-        return arena.getName();
-    }
 
     public RunningArena(Arena arena, World world) {
+        super(arena,world);
         this.arena = arena;
-        this.world = world;
 
         setState(ArenaState.LOBBY);
 
@@ -90,8 +78,9 @@ public class RunningArena implements Listener {
     }
 
     public RunningArena(Arena arena, World world, String theme) {
+        super(arena,world);
+
         this.arena = arena;
-        this.world = world;
 
         setState(ArenaState.LOBBY);
 
@@ -134,6 +123,7 @@ public class RunningArena implements Listener {
     }
 
     public void stop() {
+        super.stop();
         stopping = true;
         BuildBattle.getInstance().unregisterListener(this);
         new ArrayList<>(players).forEach(this::leave);
@@ -181,6 +171,7 @@ public class RunningArena implements Listener {
 
             // teleport to lobby
             return p.teleportAsync(world.getSpawnLocation()).thenApply(teleport -> {
+                p.setRespawnLocation(world.getSpawnLocation());
                 p.setGameMode(GameMode.ADVENTURE);
                 p.setAllowFlight(true);
                 p.setFlying(false);
@@ -244,6 +235,7 @@ public class RunningArena implements Listener {
         p.getInventory().setContents(this.playersInventory.get(p.getUniqueId()));
         // this.playersInventory.put(p.getUniqueId(), p.getInventory().getContents());
         p.teleport(ObsidianUtil.getMainLobby());
+        p.setRespawnLocation(ObsidianUtil.getMainLobby());
     }
 
     private void setState(ArenaState state) {

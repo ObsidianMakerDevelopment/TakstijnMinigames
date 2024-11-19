@@ -5,7 +5,8 @@ import java.util.List;
 
 import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
-import com.moyskleytech.mc.BuildBattle.game.Arenas;
+import com.moyskleytech.mc.BuildBattle.game.BaseArenas;
+import com.moyskleytech.mc.BuildBattle.game.BaseRunningArena;
 import com.moyskleytech.mc.BuildBattle.game.RunningArena;
 import com.moyskleytech.mc.BuildBattle.generator.VoidGen;
 import com.moyskleytech.mc.BuildBattle.service.Service;
@@ -28,9 +29,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockBreakEvent(BlockBreakEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 if (arena.isPreventBuildDestroy()) {
@@ -46,9 +47,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockBreakEvent(BlockBurnEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 event.setCancelled(true);
@@ -58,9 +59,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockDamageEvent(BlockDamageEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 if (arena.isPreventBuildDestroy()) {
@@ -76,9 +77,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockDropItemEvent(BlockDropItemEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
 
@@ -90,9 +91,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockExplodeEvent(BlockExplodeEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 event.setCancelled(true);
@@ -102,9 +103,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockFadeEvent(BlockFadeEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 event.setCancelled(true);
@@ -114,9 +115,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockPistonExtendEvent(BlockPistonExtendEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 event.setCancelled(true);
@@ -126,9 +127,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockPistonRetractEvent(BlockPistonRetractEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 event.setCancelled(true);
@@ -138,9 +139,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockPlaceEvent(BlockPlaceEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 if (arena.isPreventBuildDestroy()) {
@@ -156,9 +157,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockSpreadEvent(BlockSpreadEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 if (arena.isPreventBuildDestroy()) {
@@ -174,9 +175,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void LeavesDecayEvent(LeavesDecayEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 if (arena.isPreventBuildDestroy()) {
@@ -192,9 +193,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void MoistureChangeEvent(MoistureChangeEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 if (arena.isPreventBuildDestroy()) {
@@ -210,9 +211,9 @@ public class ArenaProtection extends Service implements Listener {
 
     @EventHandler
     public void BlockFromToEvent(BlockFromToEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getBlock().getWorld())) {
-            RunningArena arena = a.getRunningArenas().stream()
+            BaseRunningArena arena = a.getRunningArenas().stream()
                     .filter(ra -> ra.getWorld() == event.getBlock().getWorld()).findAny().orElse(null);
             if (arena != null) {
                 if (arena.isPreventBuildDestroy()) {

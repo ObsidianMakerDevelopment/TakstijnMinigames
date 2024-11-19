@@ -12,15 +12,9 @@ public class TickService extends Service implements Listener {
 
     @Override
     public void onLoad() throws ServiceLoadException {
-        task=Scheduler.getInstance().runTaskTimerAsync((task)->{
-            Arenas arenas = Service.get(Arenas.class);
-            arenas.getRunningArenas().forEach(RunningArena::tick);
-
-            SpleefArenas sarenas = Service.get(SpleefArenas.class);
-            sarenas.getRunningArenas().forEach(SpleefRunningArena::tick);
-
-            PillarArenas parenas = Service.get(PillarArenas.class);
-            parenas.getRunningArenas().forEach(PillarRunningArena::tick);
+        task=Scheduler.getInstance().runTaskTimer((task)->{
+            BaseArenas arenas = Service.get(BaseArenas.class);
+            arenas.getRunningArenas().forEach(BaseRunningArena::tick);
         }, 20, 20);
         super.onLoad();
     }

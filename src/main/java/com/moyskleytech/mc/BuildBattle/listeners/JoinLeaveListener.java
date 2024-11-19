@@ -8,6 +8,8 @@ import com.moyskleytech.mc.BuildBattle.config.LanguageConfig;
 import com.moyskleytech.mc.BuildBattle.config.ObsidianConfig;
 import com.moyskleytech.mc.BuildBattle.game.ArenaState;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
+import com.moyskleytech.mc.BuildBattle.game.BaseArenas;
+import com.moyskleytech.mc.BuildBattle.game.BaseRunningArena;
 import com.moyskleytech.mc.BuildBattle.game.RunningArena;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.ui.UI;
@@ -53,8 +55,8 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        Arenas a = Service.get(Arenas.class);
-        RunningArena arena = a.getArenaForPlayer(event.getPlayer());
+        BaseArenas a = Service.get(BaseArenas.class);
+        BaseRunningArena arena = a.getArenaForPlayer(event.getPlayer());
         if (arena != null) {
             arena.leave(event.getPlayer());
         }
@@ -62,8 +64,8 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
-        Arenas a = Service.get(Arenas.class);
-        RunningArena arena = a.getArenaForPlayer(event.getPlayer());
+        BaseArenas a = Service.get(BaseArenas.class);
+        BaseRunningArena arena = a.getArenaForPlayer(event.getPlayer());
         if (arena != null) {
             if (arena.isBlockMovement()) {
                 event.setCancelled(true);
@@ -73,10 +75,10 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         Entity entity = event.getEntity();
         if (entity instanceof Player player) {
-            RunningArena arena = a.getArenaForPlayer(player);
+            BaseRunningArena arena = a.getArenaForPlayer(player);
             if (arena != null) {
                 event.setCancelled(isEnabled());
             }
@@ -85,10 +87,10 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void onEntityDamageByBlock(EntityDamageByBlockEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         Entity entity = event.getEntity();
         if (entity instanceof Player player) {
-            RunningArena arena = a.getArenaForPlayer(player);
+            BaseRunningArena arena = a.getArenaForPlayer(player);
             if (arena != null) {
                 event.setCancelled(isEnabled());
             }
@@ -97,10 +99,10 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         Entity entity = event.getEntity();
         if (entity instanceof Player player) {
-            RunningArena arena = a.getArenaForPlayer(player);
+            BaseRunningArena arena = a.getArenaForPlayer(player);
             if (arena != null) {
                 event.setCancelled(isEnabled());
             }
@@ -109,7 +111,7 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void onEntitySpawnEvent(EntitySpawnEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         if (a.isArena(event.getLocation().getWorld())) {
             if (event.getEntity() instanceof LivingEntity living)
                 living.setAI(false);
@@ -118,9 +120,9 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void InventoryMoveItemEvent(InventoryMoveItemEvent event) {
-        Arenas a = Service.get(Arenas.class);
+        BaseArenas a = Service.get(BaseArenas.class);
         Player player = (Player) event.getInitiator().getViewers().get(0);
-        RunningArena arena = a.getArenaForPlayer(player);
+        BaseRunningArena arena = a.getArenaForPlayer(player);
         if (arena != null) {
             if (arena.isPreventBuildDestroy()) {
                 Logger.trace("InventoryMoveItemEvent");
@@ -147,7 +149,7 @@ public class JoinLeaveListener extends Service implements Listener {
                 Player p = event.getPlayer();
                 int slot = p.getInventory().getHeldItemSlot();
                 if (slot <= 6) {
-                    arena.getCurrent_plot().vote.put(p.getUniqueId(), slot - 1);
+                    arena.getCurrent_plot().vote.put(p.getUniqueId(), slot );
                     p.sendMessage(LanguageConfig.getInstance().voted().with(p).component());
 
                     try {

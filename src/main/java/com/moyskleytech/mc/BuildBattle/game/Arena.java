@@ -14,8 +14,7 @@ import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 import lombok.Getter;
 
 @Getter
-public class Arena {
-    public UUID id;
+public class Arena extends BaseArena {
     public Environment type = Environment.NORMAL;
     public int plotSize = 20;
     public int plotHeight = 40;
@@ -33,12 +32,14 @@ public class Arena {
 
     public RunningArena start() {
         Arenas arenas = Service.get(Arenas.class);
+        BaseArenas barenas = Service.get(BaseArenas.class);
         WorldPool worlds = Service.get(WorldPool.class);
 
         World world = worlds.getWorld(type);
         RunningArena running = new RunningArena(this, world);
 
         arenas.addRunning(running);
+        barenas.addRunning(running);
 
         return running;
     }

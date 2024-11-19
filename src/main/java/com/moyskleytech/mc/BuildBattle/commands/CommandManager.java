@@ -16,12 +16,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import com.moyskleytech.mc.BuildBattle.game.Arenas;
 import com.moyskleytech.mc.BuildBattle.game.SpleefArenas;
+import com.moyskleytech.mc.BuildBattle.game.PillarArenas;
 import org.incendo.cloud.paper.PaperCommandManager;
 import org.incendo.cloud.paper.util.sender.PaperSimpleSenderMapper;
 import org.incendo.cloud.paper.util.sender.Source;
 import org.incendo.cloud.bukkit.CloudBukkitCapabilities;
 import org.incendo.cloud.execution.ExecutionCoordinator;
 import org.incendo.cloud.suggestion.Suggestion;
+
 @Getter
 public class CommandManager extends Service {
 
@@ -47,12 +49,14 @@ public class CommandManager extends Service {
         commands = new ArrayList<>();
 
         commands.add(new JoinCommand());
+        commands.add(new PillarJoinCommand());
         commands.add(new SpleefJoinCommand());
         commands.add(new ForceCommand());
         commands.add(new TestCommand());
         commands.add(new ReloadCommand());
         commands.add(new AdminCommand());
         commands.add(new SpleefAdminCommand());
+        commands.add(new PillarAdminCommand());
 
         commands.forEach(arg0 -> {
             try {
@@ -119,14 +123,22 @@ public class CommandManager extends Service {
 
         Arenas arenas = Service.get(Arenas.class);
         manager.parserRegistry().registerSuggestionProvider("arenas",
-        
+
                 (commandSenderCommandContext, s) -> {
-                    return CompletableFuture.completedFuture(arenas.names().stream().map(name-> Suggestion.suggestion(name)).toList());
+                    return CompletableFuture
+                            .completedFuture(arenas.names().stream().map(name -> Suggestion.suggestion(name)).toList());
                 });
         SpleefArenas spleefArenas = Service.get(SpleefArenas.class);
         manager.parserRegistry().registerSuggestionProvider("spleefarenas",
                 (commandSenderCommandContext, s) -> {
-                    return CompletableFuture.completedFuture(spleefArenas.names().stream().map(name-> Suggestion.suggestion(name)).toList());
+                    return CompletableFuture.completedFuture(
+                            spleefArenas.names().stream().map(name -> Suggestion.suggestion(name)).toList());
+                });
+        PillarArenas pillArenas = Service.get(PillarArenas.class);
+        manager.parserRegistry().registerSuggestionProvider("Pillararenas",
+                (commandSenderCommandContext, s) -> {
+                    return CompletableFuture.completedFuture(
+                        pillArenas.names().stream().map(name -> Suggestion.suggestion(name)).toList());
                 });
         commands.forEach(arg0 -> {
             try {
