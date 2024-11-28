@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -134,34 +135,50 @@ public class PillarRunningArena extends BaseRunningArena implements Listener {
         super.stop();
         stopping = true;
 
-        // WinnerMessageConfig cfg = LanguageConfig.getInstance().winnerMessage();
-        // {
-        // for (Player p : players) {
-        // var header = processPlaceholders(cfg.header(), p);
-        // List<LanguagePlaceholder> center = new ArrayList<>();
-        // for (int i = 0; i < cfg.numberPlayerShown(); i++) {
-        // int ij = i;
-        // try {
-        // Player pl = Bukkit.getPlayer(playersRank.entrySet().stream()
-        // .filter(x -> x.getValue().intValue() == ij).findAny().get().getKey());
-        // center.add(
-        // cfg.row().replace("%name%", pl.displayName())
-        // .replace("%position%", String.valueOf(i + 1))
-        // .replace("%score%", String.valueOf(i + 1)));
-        // } catch (Throwable t) {
-
-        // }
-        // }
-        // center = processPlaceholders(center, p);
-        // var footer = processPlaceholders(cfg.header(), p);
-        // List<LanguagePlaceholder> wholeMsaage = new ArrayList<>();
-        // wholeMsaage.addAll(header);
-        // wholeMsaage.addAll(center);
-        // wholeMsaage.addAll(footer);
-        // for (var lp : wholeMsaage)
-        // p.sendMessage(lp.component());
-        // }
-        // }
+        WinnerMessageConfig cfg = LanguageConfig.getInstance().winnerMessage();
+        {
+            for (Player p : players) {
+                try {
+                    var header = processPlaceholders(cfg.header(), p);
+                    List<LanguagePlaceholder> center_ = new ArrayList<>();
+                    for (int i = 0; i < cfg.numberPlayerShown(); i++) {
+                        int ij = i;
+                        Optional<Map.Entry<UUID,Integer>> pl = playersRank.entrySet().stream()
+                                .filter(x -> x.getValue().intValue() == ij).findAny();
+                        pl.ifPresent(id->{
+                            Player plr = Bukkit.getPlayer(id.getKey());
+                            center_.add(
+                                cfg.row().replace("%name%", plr.displayName())
+                                        .replace("%position%", String.valueOf(ij + 1))
+                                        .replace("%score%", String.valueOf(ij + 1)));
+                        });
+                    }
+                    List<LanguagePlaceholder> center = processPlaceholders(center_, p);
+                    var footer = processPlaceholders(cfg.footer(), p);
+                    List<LanguagePlaceholder> wholeMsaage = new ArrayList<>();
+                    wholeMsaage.addAll(header);
+                    wholeMsaage.addAll(center);
+                    wholeMsaage.addAll(footer);
+                    for (var lp : wholeMsaage)
+                        p.sendMessage(lp.component());
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+                Integer rank = playersRank.get(p.getUniqueId());
+                if(rank!=null)
+                {
+                    List<String> rewardCmds = ObsidianConfig.getInstance().getStringList("pil_reward."+(rank.intValue()+1));
+                    for(String cmd: rewardCmds)
+                    {
+                        if(cmd!=null)
+                        {
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replaceAll("%player%", p.getName()));
+                            BuildBattle.getInstance().getLogger().fine(cmd.replaceAll("%player%", p.getName()));
+                        }
+                    }
+                }
+            }
+        }
 
         BuildBattle.getInstance().unregisterListener(this);
         new ArrayList<>(players).forEach(this::leave);
@@ -197,6 +214,7 @@ public class PillarRunningArena extends BaseRunningArena implements Listener {
 
     @SuppressWarnings("CallToPrintStackTrace")
     public CompletableFuture<Boolean> join(Player p) {
+        if(players.contains(p)) return CompletableFuture.completedFuture(false);
         if (state == PillarArenaState.LOBBY) {
             players.add(p);
             this.playersInventory.put(p.getUniqueId(), p.getInventory().getContents());
@@ -207,7 +225,7 @@ public class PillarRunningArena extends BaseRunningArena implements Listener {
             // teleport to lobby
             return p.teleportAsync(world.getSpawnLocation()).thenApply(teleport -> {
                 Scheduler.getInstance().runEntityTask(p, 0, () -> {
-                    p.setRespawnLocation(world.getSpawnLocation());
+                    p.setRespawnLocation(world.getSpawnLocation(), true);
                     p.setGameMode(GameMode.ADVENTURE);
                     p.setAllowFlight(true);
                     p.setFlying(true);
@@ -252,7 +270,7 @@ public class PillarRunningArena extends BaseRunningArena implements Listener {
         p.getInventory().setContents(this.playersInventory.get(p.getUniqueId()));
         // this.playersInventory.put(p.getUniqueId(), p.getInventory().getContents());
         p.teleport(ObsidianUtil.getPillarMainLobby());
-        p.setRespawnLocation(ObsidianUtil.getPillarMainLobby());
+        p.setRespawnLocation(ObsidianUtil.getPillarMainLobby(), true);
 
     }
 
@@ -385,8 +403,6 @@ public class PillarRunningArena extends BaseRunningArena implements Listener {
                 p.sendMessage(lp.with(p).component());
         }
         if (state == PillarArenaState.LOBBY) {
-            players.forEach(player -> player.getInventory().setItem(4,
-                    Data.getInstance().getItems().voteItems.get(6).forPlayer(player).build()));
             if (players.size() >= arena.getMinimumPlayers()) {
                 // Once enough players have joined reduce the countdown
                 countdown--;
@@ -496,7 +512,10 @@ public class PillarRunningArena extends BaseRunningArena implements Listener {
                 playersRank.put(pl.getUniqueId(), Integer.valueOf((int) countLiving));
 
                 if (countLiving == 1) {
-                    setWinner(players.stream().filter(p -> p.getGameMode() == GameMode.SURVIVAL).findAny().get());
+                    Player winner = players.stream().filter(p -> p.getGameMode() == GameMode.SURVIVAL).findAny().get();
+                    playersRank.put(winner.getUniqueId(), Integer.valueOf(0));
+
+                    setWinner(winner);
                     setState(PillarArenaState.ENDING);
                 }
                 if (countLiving == 0) {

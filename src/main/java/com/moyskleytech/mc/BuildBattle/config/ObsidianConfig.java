@@ -76,6 +76,18 @@ public class ObsidianConfig extends Service {
                     .key("prefix").defValue("&f[<RAINBOW1>BuildBattle</RAINBOW>&f]")
                     .key("themes").defValue(List.of("Car","Boat","Cat","Snowman"))
                     ;
+
+            ConfigSection bb_reward = config.section("bb_reward");
+            bb_reward.key("-2").defValue(List.of("Add reward in terms of Rank: [/command %player%]"));
+            bb_reward.back();
+
+            ConfigSection spl_reward = config.section("spl_reward");
+            spl_reward.key("-2").defValue(List.of("Add reward in terms of Rank: [/command %player%]"));
+            spl_reward.back();
+
+            ConfigSection pil_reward = config.section("pil_reward");
+            pil_reward.key("-2").defValue(List.of("Add reward in terms of Rank: [/command %player%]"));
+            pil_reward.back();
             PasterConfig.build(config);
 
             generator.saveIfModified();

@@ -244,11 +244,6 @@ public class BuildBattle extends JavaPlugin {
         Logger.trace("API has been registered!");
 
         Logger.setMode(Level.WARNING);
-
-        for(VillagerTrade r: ObsidianUtil.getAllVillagersRecipes())
-        {
-            Logger.info("Recipe {} {}", r.getClass(), r.toString());
-        }
     }
 
     public void registerListener(Listener listener) {

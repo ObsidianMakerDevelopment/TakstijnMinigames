@@ -26,6 +26,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -36,6 +37,7 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.inventory.*;
 
 public class JoinLeaveListener extends Service implements Listener {
@@ -75,7 +77,7 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
-        BaseArenas a = Service.get(BaseArenas.class);
+        Arenas a = Service.get(Arenas.class);
         Entity entity = event.getEntity();
         if (entity instanceof Player player) {
             BaseRunningArena arena = a.getArenaForPlayer(player);
@@ -87,7 +89,7 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void onEntityDamageByBlock(EntityDamageByBlockEvent event) {
-        BaseArenas a = Service.get(BaseArenas.class);
+        Arenas a = Service.get(Arenas.class);
         Entity entity = event.getEntity();
         if (entity instanceof Player player) {
             BaseRunningArena arena = a.getArenaForPlayer(player);
@@ -99,7 +101,7 @@ public class JoinLeaveListener extends Service implements Listener {
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        BaseArenas a = Service.get(BaseArenas.class);
+        Arenas a = Service.get(Arenas.class);
         Entity entity = event.getEntity();
         if (entity instanceof Player player) {
             BaseRunningArena arena = a.getArenaForPlayer(player);
@@ -140,8 +142,7 @@ public class JoinLeaveListener extends Service implements Listener {
             if (arena.getState() == ArenaState.LOBBY) {
                 Player p = event.getPlayer();
                 int slot = p.getInventory().getHeldItemSlot();
-                if(slot==4)
-                {
+                if (slot == 4) {
                     arena.openVoteInventory(player);
                 }
             }
@@ -149,7 +150,7 @@ public class JoinLeaveListener extends Service implements Listener {
                 Player p = event.getPlayer();
                 int slot = p.getInventory().getHeldItemSlot();
                 if (slot <= 6) {
-                    arena.getCurrent_plot().vote.put(p.getUniqueId(), slot );
+                    arena.getCurrent_plot().vote.put(p.getUniqueId(), slot);
                     p.sendMessage(LanguageConfig.getInstance().voted().with(p).component());
 
                     try {
@@ -173,8 +174,7 @@ public class JoinLeaveListener extends Service implements Listener {
             if (arena.getState() == ArenaState.LOBBY) {
                 Player p = event.getPlayer();
                 int slot = p.getInventory().getHeldItemSlot();
-                if(slot==4)
-                {
+                if (slot == 4) {
                     arena.openVoteInventory(player);
                 }
             }
@@ -206,8 +206,7 @@ public class JoinLeaveListener extends Service implements Listener {
             if (arena.getState() == ArenaState.LOBBY) {
                 Player p = event.getPlayer();
                 int slot = p.getInventory().getHeldItemSlot();
-                if(slot==4)
-                {
+                if (slot == 4) {
                     arena.openVoteInventory(player);
                 }
             }
@@ -241,6 +240,27 @@ public class JoinLeaveListener extends Service implements Listener {
                 UI gui = (UI) event.getInventory().getHolder();
                 gui.click(event);
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        BaseArenas arenas = Service.get(BaseArenas.class);
+        BaseRunningArena arena = arenas.getArenaForPlayer(event.getPlayer());
+        if (arena != null) {
+            event.getPlayer().setRespawnLocation(arena.getWorld().getSpawnLocation(), isEnabled());
+            event.setRespawnLocation(arena.getWorld().getSpawnLocation());
+        }
+    }
+    @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
+    public void onPlayerMove(PlayerMoveEvent event)
+    {
+        if(event.getTo().getY() < -64)
+        {
+            BaseArenas arenas = Service.get(BaseArenas.class);
+            BaseRunningArena arena = arenas.getArenaForPlayer(event.getPlayer());
+
+            event.getPlayer().setHealth(0.0d);
         }
     }
 

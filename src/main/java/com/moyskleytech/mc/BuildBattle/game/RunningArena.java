@@ -52,7 +52,7 @@ public class RunningArena extends BaseRunningArena implements Listener {
     Map<UUID, VotingUI> votingUIs = new HashMap<>();
     List<AtomicInteger> voting = new ArrayList<>();
     List<String> themes = new ArrayList<>();
-  
+
     private int countdown = 0;
     private int voteIndex = 0;
     private Iterator<Plot> plotsToVote;
@@ -60,7 +60,7 @@ public class RunningArena extends BaseRunningArena implements Listener {
     private Plot current_plot;
 
     public RunningArena(Arena arena, World world) {
-        super(arena,world);
+        super(arena, world);
         this.arena = arena;
 
         setState(ArenaState.LOBBY);
@@ -78,7 +78,7 @@ public class RunningArena extends BaseRunningArena implements Listener {
     }
 
     public RunningArena(Arena arena, World world, String theme) {
-        super(arena,world);
+        super(arena, world);
 
         this.arena = arena;
 
@@ -162,6 +162,8 @@ public class RunningArena extends BaseRunningArena implements Listener {
 
     @SuppressWarnings("CallToPrintStackTrace")
     public CompletableFuture<Boolean> join(Player p) {
+        if(players.contains(p)) return CompletableFuture.completedFuture(false);
+
         if (state == ArenaState.LOBBY) {
             players.add(p);
             this.playersInventory.put(p.getUniqueId(), p.getInventory().getContents());
@@ -171,7 +173,7 @@ public class RunningArena extends BaseRunningArena implements Listener {
 
             // teleport to lobby
             return p.teleportAsync(world.getSpawnLocation()).thenApply(teleport -> {
-                p.setRespawnLocation(world.getSpawnLocation());
+                p.setRespawnLocation(world.getSpawnLocation(), true);
                 p.setGameMode(GameMode.ADVENTURE);
                 p.setAllowFlight(true);
                 p.setFlying(false);
@@ -235,7 +237,7 @@ public class RunningArena extends BaseRunningArena implements Listener {
         p.getInventory().setContents(this.playersInventory.get(p.getUniqueId()));
         // this.playersInventory.put(p.getUniqueId(), p.getInventory().getContents());
         p.teleport(ObsidianUtil.getMainLobby());
-        p.setRespawnLocation(ObsidianUtil.getMainLobby());
+        p.setRespawnLocation(ObsidianUtil.getMainLobby(), true);
     }
 
     private void setState(ArenaState state) {
@@ -342,25 +344,42 @@ public class RunningArena extends BaseRunningArena implements Listener {
             WinnerMessageConfig cfg = LanguageConfig.getInstance().winnerMessage();
             {
                 for (Player p : players) {
-                    var header = processPlaceholders(cfg.header(), p);
-                    List<LanguagePlaceholder> center = new ArrayList<>();
-                    for (int i = 0; i < cfg.numberPlayerShown(); i++) {
-                        if (i < plotsList.size()) {
-                            Plot aPlot = plotsList.get(i);
-                            center.add(
-                                    cfg.row().replace("%name%", aPlot.owner.displayName())
-                                            .replace("%position%", String.valueOf(i + 1))
-                                            .replace("%score%", String.valueOf(aPlot.getScore())));
+                    try {
+                        var header = processPlaceholders(cfg.header(), p);
+                        List<LanguagePlaceholder> center = new ArrayList<>();
+                        for (int i = 0; i < cfg.numberPlayerShown(); i++) {
+                            if (i < plotsList.size()) {
+                                Plot aPlot = plotsList.get(i);
+                                center.add(
+                                        cfg.row().replace("%name%", aPlot.owner.displayName())
+                                                .replace("%position%", String.valueOf(i + 1))
+                                                .replace("%score%", String.valueOf(aPlot.getScore())));
+                            }
+                        }
+                        center = processPlaceholders(center, p);
+                        var footer = processPlaceholders(cfg.footer(), p);
+                        List<LanguagePlaceholder> wholeMsaage = new ArrayList<>();
+                        wholeMsaage.addAll(header);
+                        wholeMsaage.addAll(center);
+                        wholeMsaage.addAll(footer);
+                        for (var lp : wholeMsaage)
+                            p.sendMessage(lp.component());
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+
+                }
+                for (int i = 0; i < plotsList.size(); i++) {
+                    Plot aPlot = plotsList.get(i);
+
+                    List<String> rewardCmds = ObsidianConfig.getInstance().getStringList("bb_reward." + (i + 1));
+                    for (String cmd : rewardCmds) {
+                        if (cmd != null) {
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                                    cmd.replaceAll("%player%", aPlot.owner.getName()));
+                            BuildBattle.getInstance().getLogger().fine(cmd.replaceAll("%player%", aPlot.owner.getName()));
                         }
                     }
-                    center = processPlaceholders(center, p);
-                    var footer = processPlaceholders(cfg.header(), p);
-                    List<LanguagePlaceholder> wholeMsaage = new ArrayList<>();
-                    wholeMsaage.addAll(header);
-                    wholeMsaage.addAll(center);
-                    wholeMsaage.addAll(footer);
-                    for (var lp : wholeMsaage)
-                        p.sendMessage(lp.component());
                 }
             }
             // BIG CHAT MESSAGE WITH EVERYONE SCORE
@@ -525,14 +544,14 @@ public class RunningArena extends BaseRunningArena implements Listener {
         List<LanguagePlaceholder> scoreboard_lines = List.of();
         if (null != state)
             switch (state) {
-            case LOBBY -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
-            case STARTING -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().startingScoreboard();
-            case BUILDING -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().buildingScoreboard();
-            case SHOWING_BUILDS -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().votingScoreboard();
-            case SHOWING_WINNER -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().winnerScoreboard();
-            default -> {
+                case LOBBY -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().lobbyScoreboard();
+                case STARTING -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().startingScoreboard();
+                case BUILDING -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().buildingScoreboard();
+                case SHOWING_BUILDS -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().votingScoreboard();
+                case SHOWING_WINNER -> scoreboard_lines = LanguageConfig.getInstance().scoreboard().winnerScoreboard();
+                default -> {
+                }
             }
-        }
 
         return processPlaceholders(scoreboard_lines, board.getPlayer());
     }
