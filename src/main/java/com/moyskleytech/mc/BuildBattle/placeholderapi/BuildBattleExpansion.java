@@ -18,6 +18,11 @@ public class BuildBattleExpansion extends PlaceholderExpansion {
     }
 
     @Override
+    public boolean persist() {
+        return true; // This is required or else PlaceholderAPI will unregister the Expansion on reload
+    }
+
+    @Override
     public String getVersion() {
         return BuildBattle.getInstance().getVersion();
     }
