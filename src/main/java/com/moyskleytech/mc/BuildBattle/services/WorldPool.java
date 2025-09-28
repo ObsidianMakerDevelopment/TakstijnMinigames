@@ -12,6 +12,9 @@ import java.util.Optional;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.Bukkit;
+import org.bukkit.GameRule;
+import org.bukkit.entity.SpawnCategory;
+import org.bukkit.Difficulty;
 
 public class WorldPool extends Service {
 
@@ -36,6 +39,26 @@ public class WorldPool extends Service {
                 World ww = Bukkit.getWorld(w);
                 if (ww == null)
                     throw new Exception("World missing");
+                ww.setAutoSave(false);
+
+                ww.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
+                ww.setDifficulty(Difficulty.NORMAL);
+                ww.setSpawnFlags(true, true);
+                ww.setStorm(false);
+                ww.setThundering(false);
+                ww.setWeatherDuration(Integer.MAX_VALUE);
+                ww.setKeepSpawnInMemory(false);
+                ww.setTicksPerSpawns(SpawnCategory.ANIMAL, 1);
+                ww.setTicksPerSpawns(SpawnCategory.MONSTER, 1);
+                ww.setAutoSave(false);
+                ww.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+                ww.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+                ww.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
+                ww.setGameRule(GameRule.DO_FIRE_TICK, false);
+                ww.setGameRule(GameRule.MOB_GRIEFING, false);
+                ww.setGameRule(GameRule.DO_MOB_SPAWNING, false);
+                ww.setGameRule(GameRule.DROWNING_DAMAGE, false);
+
                 free_worlds.add(ww);
             } catch (Exception ignored) {
                 BuildBattle.getInstance().getLogger().warning("World " + w + " is not importable, will be ignored");
