@@ -75,6 +75,7 @@ public class ObsidianConfig extends Service {
                     .key("version").defValue(plugin.getVersion())
                     .key("prefix").defValue("&f[<RAINBOW1>BuildBattle</RAINBOW>&f]")
                     .key("themes").defValue(List.of("Car","Boat","Cat","Snowman"))
+                    .key("worlds").defValue(List.of("stage"));
                     ;
 
             ConfigSection bb_reward = config.section("bb_reward");
@@ -88,6 +89,7 @@ public class ObsidianConfig extends Service {
             ConfigSection pil_reward = config.section("pil_reward");
             pil_reward.key("-2").defValue(List.of("Add reward in terms of Rank: [/command %player%]"));
             pil_reward.back();
+
             PasterConfig.build(config);
 
             generator.saveIfModified();
@@ -99,6 +101,10 @@ public class ObsidianConfig extends Service {
     public List<String> themes()
     {
         return getStringList("themes");
+    }
+      public List<String> worlds()
+    {
+        return getStringList("worlds");
     }
     public void forceReload() {
         loadDefaults();

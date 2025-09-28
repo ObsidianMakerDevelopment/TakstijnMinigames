@@ -1,13 +1,10 @@
 package com.moyskleytech.mc.BuildBattle.game;
 
-import java.util.UUID;
+import java.util.Optional;
 
-import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.WorldType;
 import org.bukkit.World.Environment;
 
-import com.moyskleytech.mc.BuildBattle.BuildBattle;
 import com.moyskleytech.mc.BuildBattle.service.Service;
 import com.moyskleytech.mc.BuildBattle.services.WorldPool;
 
@@ -30,29 +27,36 @@ public class Arena extends BaseArena {
     public int winnerDuration = 60;
     public int minimumPlayers = 2;
 
-    public RunningArena start() {
+    public Optional<RunningArena> start() {
         Arenas arenas = Service.get(Arenas.class);
         BaseArenas barenas = Service.get(BaseArenas.class);
         WorldPool worlds = Service.get(WorldPool.class);
 
-        World world = worlds.getWorld(type);
-        RunningArena running = new RunningArena(this, world);
+        Optional<World> world = worlds.getWorld(type);
+        if (world.isPresent()) {
+            RunningArena running = new RunningArena(this, world.get());
 
-        arenas.addRunning(running);
-        barenas.addRunning(running);
+            arenas.addRunning(running);
+            barenas.addRunning(running);
 
-        return running;
+            return Optional.of(running);
+        } else
+            return Optional.empty();
     }
 
-    public RunningArena start(String theme) {
+    public Optional<RunningArena> start(String theme) {
         Arenas arenas = Service.get(Arenas.class);
         WorldPool worlds = Service.get(WorldPool.class);
 
-        World world = worlds.getWorld(type);
-        RunningArena running = new RunningArena(this, world, theme);
+        Optional<World> world = worlds.getWorld(type);
+        if (world.isPresent()) {
 
-        arenas.addRunning(running);
+            RunningArena running = new RunningArena(this, world.get(), theme);
 
-        return running;
+            arenas.addRunning(running);
+
+            return Optional.of(running);
+        } else
+            return Optional.empty();
     }
 }

@@ -50,7 +50,7 @@ import net.kyori.adventure.text.Component;
 
 @SuppressWarnings("unchecked")
 @Getter
-public class SpleefRunningArena extends BaseRunningArena implements Listener {
+public class SpleefRunningArena extends BaseRunningArena {
     SpleefArena arena;
     SpleefArenaState state = SpleefArenaState.NONE;
     Plot playerPlot;
@@ -133,11 +133,11 @@ public class SpleefRunningArena extends BaseRunningArena implements Listener {
                     }
                     List<LanguagePlaceholder> center = processPlaceholders(center_, p);
                     var footer = processPlaceholders(cfg.footer(), p);
-                    List<LanguagePlaceholder> wholeMsaage = new ArrayList<>();
-                    wholeMsaage.addAll(header);
-                    wholeMsaage.addAll(center);
-                    wholeMsaage.addAll(footer);
-                    for (var lp : wholeMsaage)
+                    List<LanguagePlaceholder> wholeMessage = new ArrayList<>();
+                    wholeMessage.addAll(header);
+                    wholeMessage.addAll(center);
+                    wholeMessage.addAll(footer);
+                    for (var lp : wholeMessage)
                         p.sendMessage(lp.component());
                 } catch (Throwable t) {
                     t.printStackTrace();
@@ -297,7 +297,6 @@ public class SpleefRunningArena extends BaseRunningArena implements Listener {
                     .thenAccept(
                             Void3 -> currentAction = ObsidianUtil.future(teleports).thenAccept(ignored_teleport -> {
                                 currentAction = runLaterOrNow().thenAccept(Void4 -> {
-                                    var plot = playerPlot;
                                     Scheduler.getInstance().runTask(() -> {
                                         setState(SpleefArenaState.BATTLE);
                                     });

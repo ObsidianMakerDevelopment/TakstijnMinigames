@@ -2,6 +2,7 @@ package com.moyskleytech.mc.BuildBattle.game;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.bukkit.Location;
@@ -30,15 +31,19 @@ public class PillarArena extends BaseArena {
     public int timeBetweenItems = 2;
     public List<ObsidianItemTemplate> additionnalItems = new ArrayList<>();
 
-    public PillarRunningArena start() {
+    public Optional<PillarRunningArena> start() {
         PillarArenas arenas = Service.get(PillarArenas.class);
         WorldPool worlds = Service.get(WorldPool.class);
 
-        World world = worlds.getWorld(type);
-        PillarRunningArena running = new PillarRunningArena(this, world);
+        Optional<World> world = worlds.getWorld(type);
+        if (world.isPresent()) {
+            PillarRunningArena running = new PillarRunningArena(this, world.get());
 
-        arenas.addRunning(running);
+            arenas.addRunning(running);
 
-        return running;
+            return Optional.of(running);
+        }
+        else
+            return Optional.empty();
     }
 }

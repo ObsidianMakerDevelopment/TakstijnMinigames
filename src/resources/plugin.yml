@@ -9,4 +9,5 @@ softdepend:
   - "PlaceholderAPI"
   - "Citizens"
   - "ObsidianMaterial"
+  - "Multiverse-Core"
 folia-supported: true

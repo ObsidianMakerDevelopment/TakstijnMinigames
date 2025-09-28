@@ -43,7 +43,7 @@ public class PillarArenas extends Service implements Listener {
 
     public void removeRunning(PillarRunningArena arena) {
         Service.get(BaseArenas.class).removeRunning(arena);
-       
+
         Logger.trace("Arenas::removeRunning({})", arena);
         runningArenas.remove(arena);
     }
@@ -137,9 +137,9 @@ public class PillarArenas extends Service implements Listener {
                 return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
             PillarArena toStart = maps.get(0);
-            PillarRunningArena running = toStart.start();
-            running.join(player);
-            return ActionResult.success();
+            Optional<PillarRunningArena> running = toStart.start();
+            running.ifPresent(ra -> ra.join(player));
+            return (running.isPresent()) ? ActionResult.success() : ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
         }
     }
 
@@ -162,9 +162,9 @@ public class PillarArenas extends Service implements Listener {
             if (toStart == null)
                 return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
-            PillarRunningArena running = toStart.start();
-            running.join(player);
-            return ActionResult.success();
+            Optional<PillarRunningArena> running = toStart.start();
+            running.ifPresent(ra->ra.join(player));
+            return (running.isPresent())?ActionResult.success(): ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
         }
     }
 

@@ -133,9 +133,10 @@ public class Arenas extends Service implements Listener {
                 return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
             Arena toStart = maps.get(0);
-            RunningArena running = toStart.start();
-            running.join(player);
-            return ActionResult.success();
+            Optional<RunningArena> running = toStart.start();
+            running.ifPresent(ra -> ra.join(player));
+
+            return (running.isPresent()) ? ActionResult.success() : ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
         }
     }
 
@@ -158,9 +159,10 @@ public class Arenas extends Service implements Listener {
             if (toStart == null)
                 return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
-            RunningArena running = toStart.start();
-            running.join(player);
-            return ActionResult.success();
+            Optional<RunningArena> running = toStart.start();
+            running.ifPresent(ra -> ra.join(player));
+
+            return (running.isPresent()) ? ActionResult.success() : ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
         }
     }
 
@@ -171,9 +173,10 @@ public class Arenas extends Service implements Listener {
         if (toStart == null)
             return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
-        RunningArena running = toStart.start(theme);
-        running.join(player);
-        return ActionResult.success();
+        Optional<RunningArena> running = toStart.start(theme);
+        running.ifPresent(ra -> ra.join(player));
+
+        return (running.isPresent()) ? ActionResult.success() : ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
     }
 
     public Arena byName(String map) {

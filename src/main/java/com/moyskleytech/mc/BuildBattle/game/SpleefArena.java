@@ -2,6 +2,7 @@ package com.moyskleytech.mc.BuildBattle.game;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.bukkit.Location;
@@ -31,15 +32,19 @@ public class SpleefArena extends BaseArena {
     public ObsidianItemTemplate tool = null;
     public List<LocationDB> spawnOffsets = new ArrayList<>();
 
-    public SpleefRunningArena start() {
+    public Optional<SpleefRunningArena> start() {
         SpleefArenas arenas = Service.get(SpleefArenas.class);
         WorldPool worlds = Service.get(WorldPool.class);
 
-        World world = worlds.getWorld(type);
-        SpleefRunningArena running = new SpleefRunningArena(this, world);
+        Optional<World> world = worlds.getWorld(type);
+        if (world.isPresent()) {
+            SpleefRunningArena running = new SpleefRunningArena(this, world.get());
 
-        arenas.addRunning(running);
+            arenas.addRunning(running);
 
-        return running;
+            return Optional.of(running);
+        }
+        else
+            return Optional.empty();
     }
 }

@@ -33,7 +33,7 @@ repositories {
     maven("https://repo.screamingsandals.org/snapshots")
     maven("https://repo.maven.apache.org/maven2/")
     maven("https://nexus.iridiumdevelopment.net/repository/maven-releases/")
-    maven("https://papermc.io/repo/repository/maven-public/")
+    maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.purpurmc.org/snapshots")
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
 }
@@ -41,8 +41,8 @@ repositories {
 dependencies {
     // Dependencies that we want to shade in
     implementation("com.iridium:IridiumColorAPI:1.0.6")
-    implementation("org.incendo:cloud-core:2.1.0-SNAPSHOT" )
-    implementation("org.incendo:cloud-annotations:2.1.0-SNAPSHOT")
+    implementation("org.incendo:cloud-core:2.0.0" )
+    implementation("org.incendo:cloud-annotations:2.0.0")
     implementation("org.incendo:cloud-paper:2.0.0-SNAPSHOT")
     implementation("org.spongepowered:configurate-core:" + properties["CONFIGURATE_VERSION"])
     implementation("org.spongepowered:configurate-yaml:" + properties["CONFIGURATE_VERSION"])

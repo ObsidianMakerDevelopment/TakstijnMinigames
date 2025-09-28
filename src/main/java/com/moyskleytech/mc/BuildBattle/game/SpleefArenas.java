@@ -138,8 +138,8 @@ public class SpleefArenas extends Service implements Listener {
                 return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
             SpleefArena toStart = maps.get(0);
-            SpleefRunningArena running = toStart.start();
-            running.join(player);
+            Optional<SpleefRunningArena> running = toStart.start();
+            running.ifPresent(ra -> ra.join(player));
             return ActionResult.success();
         }
     }
@@ -163,8 +163,8 @@ public class SpleefArenas extends Service implements Listener {
             if (toStart == null)
                 return ActionResult.failure(ActionResult.MAP_NOT_EXISTING);
 
-            SpleefRunningArena running = toStart.start();
-            running.join(player);
+            Optional<SpleefRunningArena> running = toStart.start();
+            running.ifPresent(ra -> ra.join(player));
             return ActionResult.success();
         }
     }

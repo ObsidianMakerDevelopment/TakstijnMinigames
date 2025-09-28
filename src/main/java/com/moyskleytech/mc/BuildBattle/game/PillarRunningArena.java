@@ -56,7 +56,7 @@ import net.kyori.adventure.text.Component;
 
 @SuppressWarnings("unchecked")
 @Getter
-public class PillarRunningArena extends BaseRunningArena implements Listener {
+public class PillarRunningArena extends BaseRunningArena {
     PillarArena arena;
     PillarArenaState state = PillarArenaState.NONE;
     Plot playerPlot;
@@ -155,11 +155,11 @@ public class PillarRunningArena extends BaseRunningArena implements Listener {
                     }
                     List<LanguagePlaceholder> center = processPlaceholders(center_, p);
                     var footer = processPlaceholders(cfg.footer(), p);
-                    List<LanguagePlaceholder> wholeMsaage = new ArrayList<>();
-                    wholeMsaage.addAll(header);
-                    wholeMsaage.addAll(center);
-                    wholeMsaage.addAll(footer);
-                    for (var lp : wholeMsaage)
+                    List<LanguagePlaceholder> wholeMessage = new ArrayList<>();
+                    wholeMessage.addAll(header);
+                    wholeMessage.addAll(center);
+                    wholeMessage.addAll(footer);
+                    for (var lp : wholeMessage)
                         p.sendMessage(lp.component());
                 } catch (Throwable t) {
                     t.printStackTrace();
@@ -292,8 +292,6 @@ public class PillarRunningArena extends BaseRunningArena implements Listener {
             currentAction = runLaterOrNow()
                     .thenAccept(
                             Void3 -> {
-                                Paster paster = Service.get(Paster.class);
-
                                 // TODO: Create pillars and set pos1/pos2 of arena for unpasting later
 
                                 double wx = world.getSpawnLocation().getBlockX();
